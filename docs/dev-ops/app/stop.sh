@@ -1,0 +1,1 @@
+docker stop 02-big-market
