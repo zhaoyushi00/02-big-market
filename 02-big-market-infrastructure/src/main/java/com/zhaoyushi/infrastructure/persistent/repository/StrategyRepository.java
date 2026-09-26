@@ -1,11 +1,19 @@
 package com.zhaoyushi.infrastructure.persistent.repository;
 
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
+import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
+import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.infrastructure.persistent.dao.IStrategyAwardDao;
+import com.zhaoyushi.infrastructure.persistent.dao.IStrategyDao;
+import com.zhaoyushi.infrastructure.persistent.dao.IStrategyRuleDao;
+import com.zhaoyushi.infrastructure.persistent.po.Strategy;
 import com.zhaoyushi.infrastructure.persistent.po.StrategyAward;
+import com.zhaoyushi.infrastructure.persistent.po.StrategyRule;
 import com.zhaoyushi.infrastructure.persistent.redis.IRedisService;
 import com.zhaoyushi.types.common.Constants;
+import com.zhaoyushi.types.enums.ResponseCode;
+import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
 import org.redisson.api.RMap;
 import org.springframework.stereotype.Repository;
@@ -21,9 +29,13 @@ import java.util.Map;
 public class StrategyRepository implements IStrategyRepository {
 
     @Resource
+    private IStrategyDao strategyDao;
+    @Resource
     private IStrategyAwardDao strategyAwardDao;
     @Resource
     private IRedisService redisService;
+    @Resource
+    private IStrategyRuleDao strategyRuleDao;
 
     @Override
     public List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId) {
@@ -63,22 +75,71 @@ public class StrategyRepository implements IStrategyRepository {
     }
 
     @Override
-    public void storeStrateAwardSearchRateTables(Long strategyId, BigDecimal rateRange, HashMap<Integer, Integer> shuffleStrategyAwardSearchRateTables) {
+    public void storeStrategyAwardSearchRateTables(String key, BigDecimal rateRange, HashMap<Integer, Integer> shuffleStrategyAwardSearchRateTables) {
         //1、存储抽奖策略范围值，如1000以内的随机数
-        redisService.setValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId, rateRange.intValue());
+        redisService.setValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + key, rateRange.intValue());
         //2、存储概率查找表
-        Map<Integer, Integer> cacheRateTable = redisService.getMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + strategyId);
+        Map<Integer, Integer> cacheRateTable = redisService.getMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + key);
         cacheRateTable.putAll(shuffleStrategyAwardSearchRateTables);
     }
 
     @Override
     public int getRateRange(Long strategyId) {
-        return redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId);
+        Integer rateRange = redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId);
+        if (rateRange == null) {
+            throw new AppException(ResponseCode.STRATEGY_RULE_WEIGHT_IS_NULL.getCode(),
+                    "策略未装配，Redis 中不存在概率范围 key：" + strategyId);
+        }
+        return rateRange;
     }
 
     @Override
-    public Integer getStrategyAwardAssemble(Long strategyId, int rateKey) {
-        return redisService.getFromMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + strategyId, rateKey);
+    public int getRateRange(String key) {
+        Integer rateRange = redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + key);
+        if (rateRange == null) {
+            throw new AppException(ResponseCode.STRATEGY_RULE_WEIGHT_IS_NULL.getCode(),
+                    "策略未装配，Redis 中不存在概率范围 key：" + key);
+        }
+        return rateRange;
+        //return redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + key);
+    }
+
+    @Override
+    public Integer getStrategyAwardAssemble(String key, int rateKey) {
+        return redisService.getFromMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + key, rateKey);
+    }
+
+    @Override
+    public StrategyEntity queryStrategyEntityByStrategyId(Long strategyId) {
+        //优先缓存
+        String cacheKey = Constants.RedisKey.STRATEGY_KEY + strategyId;
+        StrategyEntity strategyEntity = redisService.getValue(cacheKey);
+
+        if(null!=strategyEntity) return strategyEntity;
+        Strategy strategy = strategyDao.queryStrategyByStrategyId(strategyId);
+        strategyEntity = StrategyEntity.builder()
+                .strategyId(strategy.getStrategyId())
+                .strategyDesc(strategy.getStrategyDesc())
+                .ruleModels(strategy.getRuleModel())
+                .build();
+        redisService.setValue(cacheKey, strategyEntity);
+        return strategyEntity;
+    }
+
+    @Override
+    public StrategyRuleEntity queryStrategyRule(Long strategyId, String ruleModel) {
+        StrategyRule strategyRuleReq = new StrategyRule();
+        strategyRuleReq.setStrategyId(strategyId);
+        strategyRuleReq.setRuleModel(ruleModel);
+        StrategyRule strategyRulesRes = strategyRuleDao.queryStrategyRule(strategyRuleReq);
+        return StrategyRuleEntity.builder()
+                .strategyId(strategyRulesRes.getStrategyId())
+                .awardId(strategyRulesRes.getAwardId())
+                .ruleType(strategyRulesRes.getRuleType())
+                .ruleModel(strategyRulesRes.getRuleModel())
+                .ruleValue(strategyRulesRes.getRuleValue())
+                .ruleDesc(strategyRulesRes.getRuleDesc())
+                .build();
     }
 
 }
