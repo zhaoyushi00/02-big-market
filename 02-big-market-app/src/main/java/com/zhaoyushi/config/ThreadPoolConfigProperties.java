@@ -3,6 +3,10 @@ package com.zhaoyushi.config;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/**
+ * 线程池配置属性
+ * <p>对应配置前缀 thread.pool.executor.config，用于构建线程池。
+ */
 @Data
 @ConfigurationProperties(prefix = "thread.pool.executor.config", ignoreInvalidFields = true)
 public class ThreadPoolConfigProperties {

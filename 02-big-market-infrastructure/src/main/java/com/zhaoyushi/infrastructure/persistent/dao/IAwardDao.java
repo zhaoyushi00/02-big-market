@@ -9,6 +9,11 @@ import java.util.List;
 @Mapper
 public interface IAwardDao {
 
+    /**
+     * 查询奖品列表
+     *
+     * @return 奖品列表
+     */
     List<Award> queryAwardList();
 
 }

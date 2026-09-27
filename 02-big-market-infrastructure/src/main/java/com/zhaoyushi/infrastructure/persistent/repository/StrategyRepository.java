@@ -37,6 +37,13 @@ public class StrategyRepository implements IStrategyRepository {
     @Resource
     private IStrategyRuleDao strategyRuleDao;
 
+    /**
+     * 查询策略奖品列表（带缓存）
+     * <p>优先从 Redis 缓存读取，未命中则查库并回填缓存。
+     *
+     * @param strategyId 策略ID
+     * @return 策略奖品实体列表
+     */
     @Override
     public List<StrategyAwardEntity> queryStrategyAwardList(Long strategyId) {
 
@@ -74,6 +81,14 @@ public class StrategyRepository implements IStrategyRepository {
         return strategyAwardEntities;
     }
 
+    /**
+     * 存储抽奖概率查找表
+     * <p>分别将概率范围值和概率查找表存储到 Redis。
+     *
+     * @param key                                  策略标识（可能含权重档位）
+     * @param rateRange                            概率范围（总格数）
+     * @param shuffleStrategyAwardSearchRateTables 打乱后的概率查找表（下标→奖品ID）
+     */
     @Override
     public void storeStrategyAwardSearchRateTables(String key, BigDecimal rateRange, HashMap<Integer, Integer> shuffleStrategyAwardSearchRateTables) {
         //1、存储抽奖策略范围值，如1000以内的随机数
@@ -83,6 +98,12 @@ public class StrategyRepository implements IStrategyRepository {
         cacheRateTable.putAll(shuffleStrategyAwardSearchRateTables);
     }
 
+    /**
+     * 获取概率范围（按策略ID）
+     *
+     * @param strategyId 策略ID
+     * @return 概率范围值（查找表总格数）
+     */
     @Override
     public int getRateRange(Long strategyId) {
         Integer rateRange = redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId);
@@ -93,6 +114,12 @@ public class StrategyRepository implements IStrategyRepository {
         return rateRange;
     }
 
+    /**
+     * 获取概率范围（按复合 key）
+     *
+     * @param key 复合 key（如 策略ID 或 策略ID_权重档位）
+     * @return 概率范围值（查找表总格数）
+     */
     @Override
     public int getRateRange(String key) {
         Integer rateRange = redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + key);
@@ -104,11 +131,42 @@ public class StrategyRepository implements IStrategyRepository {
         //return redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + key);
     }
 
+    /**
+     * 查询策略规则值
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID（可为 null）
+     * @param ruleModel  规则模型
+     * @return 规则值字符串
+     */
+    @Override
+    public String queryStrategyRuleValue(Long strategyId, Integer awardId, String ruleModel) {
+        StrategyRule strategyRule = new StrategyRule();
+        strategyRule.setRuleModel(ruleModel);
+        strategyRule.setStrategyId(strategyId);
+        strategyRule.setAwardId(awardId);
+        return strategyRuleDao.queryStrategyRuleValue(strategyRule);
+    }
+
+    /**
+     * 获取概率查找表中指定下标对应的奖品ID
+     *
+     * @param key     策略标识（可能含权重档位）
+     * @param rateKey 随机下标
+     * @return 奖品ID
+     */
     @Override
     public Integer getStrategyAwardAssemble(String key, int rateKey) {
         return redisService.getFromMap(Constants.RedisKey.STRATEGY_RATE_TABLE_KEY + key, rateKey);
     }
 
+    /**
+     * 按策略ID查询策略实体（带缓存）
+     * <p>优先从 Redis 缓存读取，未命中则查库并回填缓存。
+     *
+     * @param strategyId 策略ID
+     * @return 策略实体
+     */
     @Override
     public StrategyEntity queryStrategyEntityByStrategyId(Long strategyId) {
         //优先缓存
@@ -126,6 +184,13 @@ public class StrategyRepository implements IStrategyRepository {
         return strategyEntity;
     }
 
+    /**
+     * 按策略ID和规则模型查询规则实体
+     *
+     * @param strategyId 策略ID
+     * @param ruleModel  规则模型
+     * @return 策略规则实体
+     */
     @Override
     public StrategyRuleEntity queryStrategyRule(Long strategyId, String ruleModel) {
         StrategyRule strategyRuleReq = new StrategyRule();

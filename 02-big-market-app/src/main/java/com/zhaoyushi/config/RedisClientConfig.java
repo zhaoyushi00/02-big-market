@@ -28,6 +28,14 @@ import java.io.IOException;
 @EnableConfigurationProperties(RedisClientConfigProperties.class)
 public class RedisClientConfig {
 
+    /**
+     * 创建 Redisson 客户端 Bean
+     * <p>根据配置构建单机模式 Redis 连接，返回的 RedissonClient 供全局操作 Redis。
+     *
+     * @param applicationContext 应用上下文
+     * @param properties         Redis 连接配置
+     * @return Redisson 客户端
+     */
     @Bean("redissonClient")
     public RedissonClient redissonClient(ConfigurableApplicationContext applicationContext, RedisClientConfigProperties properties) {
         Config config = new Config();

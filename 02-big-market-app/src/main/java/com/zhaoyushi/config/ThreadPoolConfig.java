@@ -15,6 +15,13 @@ import java.util.concurrent.*;
 @EnableConfigurationProperties(ThreadPoolConfigProperties.class)
 public class ThreadPoolConfig {
 
+    /**
+     * 创建线程池 Bean
+     * <p>根据配置的策略（policy）选择拒绝策略，构建线程池供业务异步执行使用。
+     *
+     * @param properties 线程池配置
+     * @return 线程池实例
+     */
     @Bean
     @ConditionalOnMissingBean(ThreadPoolExecutor.class)
     public ThreadPoolExecutor threadPoolExecutor(ThreadPoolConfigProperties properties) throws ClassNotFoundException, InstantiationException, IllegalAccessException {

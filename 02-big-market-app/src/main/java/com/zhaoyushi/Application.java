@@ -8,6 +8,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @Configurable
 public class Application {
 
+    /**
+     * 应用启动入口：启动 Spring Boot 应用
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args){
         SpringApplication.run(Application.class);
     }

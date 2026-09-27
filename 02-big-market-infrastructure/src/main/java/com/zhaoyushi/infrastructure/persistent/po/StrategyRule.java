@@ -3,7 +3,10 @@ package com.zhaoyushi.infrastructure.persistent.po;
 import lombok.Data;
 
 import java.util.Date;
-/*策略规则*/
+/**
+ * 策略规则 PO（对应数据库 strategy_rule 表）
+ * <p>持久化对象，与策略规则表字段一一对应。
+ */
 @Data
 public class StrategyRule {
 

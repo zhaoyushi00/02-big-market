@@ -13,8 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 策略规则实体 - 规则的详细配置
+ *
+ * <p>用途：承载「某策略(strategyId)/某奖品(awardId)下的规则模型(ruleModel)、比值(ruleValue)、描述(ruleDesc)」。
+ * <p>关键方法：{@link #getRuleWeightValues()} 解析权重规则比值串（如 4000:102,103 → {4000:[102,103]}）。
+ * <p>业务位置：策略装配阶段查询规则配置，写入 Redis 供抽奖时使用。
+ *
  * @author Fuzhengwei bugstack.cn @小傅哥
- * @description 策略规则实体
  * @create 2023-12-31 15:32
  */
 @Data

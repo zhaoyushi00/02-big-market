@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
 
-/*策略奖品明细配置*/
-
+/**
+ * 策略奖品明细配置 PO（对应数据库 strategy_award 表）
+ * <p>持久化对象，与策略奖品明细表字段一一对应。
+ */
 @Data
 public class StrategyAward {
 

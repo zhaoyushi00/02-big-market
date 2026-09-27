@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+/**
+ * 响应码枚举
+ * <p>定义系统统一的响应码：code 为程序用，info 为给人看的描述。
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
