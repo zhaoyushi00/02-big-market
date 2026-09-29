@@ -24,4 +24,6 @@ public interface IStrategyAwardDao {
      * @return 策略奖品列表
      */
     List<StrategyAward> queryStrategyAwardListByStrategyId(Long strategyId);
+
+    String queryStrategyAwardRuleModel(StrategyAward strategyAward);
 }

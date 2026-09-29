@@ -3,6 +3,7 @@ package com.zhaoyushi.infrastructure.persistent.repository;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
+import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.infrastructure.persistent.dao.IStrategyAwardDao;
 import com.zhaoyushi.infrastructure.persistent.dao.IStrategyDao;
@@ -205,6 +206,15 @@ public class StrategyRepository implements IStrategyRepository {
                 .ruleValue(strategyRulesRes.getRuleValue())
                 .ruleDesc(strategyRulesRes.getRuleDesc())
                 .build();
+    }
+
+    @Override
+    public StrategyAwardRuleModelVO queryStrategyAwardRuleModel(Long strategyId, Integer awardId) {
+        StrategyAward strategyAward = new StrategyAward();
+        strategyAward.setStrategyId(strategyId);
+        strategyAward.setAwardId(awardId);
+        String ruleModels = strategyAwardDao.queryStrategyAwardRuleModel(strategyAward);
+        return StrategyAwardRuleModelVO.builder().ruleModels(ruleModels).build();
     }
 
 }

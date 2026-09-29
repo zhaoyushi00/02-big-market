@@ -3,6 +3,7 @@ package com.zhaoyushi.domain.strategy.repository;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
+import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -25,4 +26,6 @@ public interface IStrategyRepository {
     int getRateRange(String key);
 
     String queryStrategyRuleValue(Long strategyId, Integer awardId, String ruleModel);
+
+    StrategyAwardRuleModelVO queryStrategyAwardRuleModel(Long strategyId, Integer awardId);
 }

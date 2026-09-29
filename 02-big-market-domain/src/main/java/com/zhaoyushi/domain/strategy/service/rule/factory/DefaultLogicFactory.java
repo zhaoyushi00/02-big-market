@@ -10,6 +10,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,13 +56,42 @@ public class DefaultLogicFactory {
     @AllArgsConstructor
     public enum LogicModel {
 
-        RULE_WIGHT("rule_weight","【抽奖前规则】根据抽奖权重返回可抽奖范围KEY"),
-        RULE_BLACKLIST("rule_blacklist","【抽奖前规则】黑名单规则过滤，命中黑名单则直接返回"),
+        RULE_WIGHT("rule_weight","【抽奖前规则】根据抽奖权重返回可抽奖范围KEY", "before"),
+        RULE_LOCK("rule_lock","【抽奖中规则】抽奖n次后，对应奖品可解锁抽奖", "center"),
+        RULE_LOCK_AWARD("rule_lock_award","【抽奖后规则】幸运奖兜底", "after"),
+        RULE_BLACKLIST("rule_blacklist","【抽奖前规则】黑名单规则过滤，命中黑名单则直接返回", "before"),
 
         ;
 
         private final String code;
         private final String info;
+        private final String type;
+
+        public static boolean idCenter(String code){
+            return matchType(code, "center");
+        }
+
+        public static boolean idAfter(String code){
+            return matchType(code, "after");
+        }
+
+        /**
+         * 按规则的 code 字段匹配其阶段类型（before/center/after）
+         * <p>与按枚举常量名匹配的 valueOf 不同，这里遍历枚举常量并比较 code，未知 code 返回 false 而非抛异常。
+         *
+         * @param code 规则标识，如 rule_lock、rule_weight
+         * @param type 期望的阶段类型
+         * @return 是否命中该阶段
+         */
+        private static boolean matchType(String code, String type){
+            if (null == code) return false;
+            for (LogicModel logicModel : LogicModel.values()) {
+                if (logicModel.code.equals(code)) {
+                    return type.equals(logicModel.type);
+                }
+            }
+            return false;
+        }
 
     }
 
