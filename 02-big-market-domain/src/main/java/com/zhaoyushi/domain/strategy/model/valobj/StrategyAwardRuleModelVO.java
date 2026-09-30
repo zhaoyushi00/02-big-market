@@ -1,6 +1,6 @@
 package com.zhaoyushi.domain.strategy.model.valobj;
 
-import com.zhaoyushi.domain.strategy.service.rule.factory.DefaultLogicFactory;
+import com.zhaoyushi.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import com.zhaoyushi.types.common.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

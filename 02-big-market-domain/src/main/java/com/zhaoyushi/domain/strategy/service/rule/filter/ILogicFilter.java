@@ -1,4 +1,4 @@
-package com.zhaoyushi.domain.strategy.service.rule;
+package com.zhaoyushi.domain.strategy.service.rule.filter;
 
 // 抽奖规则过滤接口
 

@@ -5,9 +5,11 @@ import com.zhaoyushi.domain.strategy.model.entity.RuleActionEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RuleMatterEntity;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
+import com.zhaoyushi.domain.strategy.service.AbstractRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyDispatch;
-import com.zhaoyushi.domain.strategy.service.rule.ILogicFilter;
-import com.zhaoyushi.domain.strategy.service.rule.factory.DefaultLogicFactory;
+import com.zhaoyushi.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
+import com.zhaoyushi.domain.strategy.service.rule.filter.ILogicFilter;
+import com.zhaoyushi.domain.strategy.service.rule.filter.factory.DefaultLogicFactory;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,17 +21,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 @Slf4j
 @Service
-public class DefaultRaffleStrategy extends AbstractRaffleStrategy{
+public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
 
     @Resource
     private DefaultLogicFactory logicFactory;
 
     //在创建对象时，接收外部传入的依赖，并转交给父类完成初始化
-    //IStrategyRepository repository：策略仓储接口，负责查询策略数据（从数据库/Redis 读取策略、奖品、规则等）。
+    //DefaultChainFactory defaultChainFactory：责任链工厂，负责根据策略配置组装责任链。
     //IStrategyDispatch strategyDispatch：策略调度接口，负责执行抽奖的"装配/抽取"逻辑。
+    //IStrategyRepository repository：策略仓储接口，负责查询策略数据（从数据库/Redis 读取策略、奖品、规则等）。
     //父类中已经有了 就不用先protected再构造函数了
-    public DefaultRaffleStrategy(IStrategyRepository repository, IStrategyDispatch strategyDispatch) {
-        super(repository, strategyDispatch);
+    public DefaultRaffleStrategy(DefaultChainFactory defaultChainFactory, IStrategyDispatch strategyDispatch, IStrategyRepository repository) {
+        super(defaultChainFactory, strategyDispatch, repository);
     }
 
     /**
