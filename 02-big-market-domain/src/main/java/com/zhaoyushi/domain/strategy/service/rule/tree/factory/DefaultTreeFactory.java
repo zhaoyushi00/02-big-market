@@ -74,7 +74,7 @@ public class DefaultTreeFactory {
         /** 节点判定结果：放行 ALLOW / 接管 TAKE_OVER，引擎据此决定下一跳 */
         private RuleLogicCheckTypeVO ruleLogicCheckTypeVO;
         /** 奖品数据：仅当节点接管（如兜底奖励）时携带最终奖品 */
-        private StrategyAwardData strategyAwardData;
+        private StrategyAwardVO strategyAwardVO;
     }
 
     /**
@@ -85,7 +85,7 @@ public class DefaultTreeFactory {
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public static class StrategyAwardData{
+    public static class StrategyAwardVO{
         /** 抽奖奖品ID - 内部流转使用 */
         private Integer awardId;
         /** 抽奖奖品规则值 - 奖品对应的规则配置字符串 */

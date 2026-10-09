@@ -12,6 +12,8 @@ public class Constants {
     public final static String COLON = ":";
     /** 分隔符：空格，用于拆分多个权重档位 */
     public final static String SPACE = " ";
+    /** 分隔符：下划线，用于拼接复合 key（如 策略ID_权重档位） */
+    public final static String UNDERLINE = "_";
 
     /** Redis Key 前缀常量 */
     public static class RedisKey {
@@ -23,5 +25,7 @@ public class Constants {
         public static String STRATEGY_RATE_TABLE_KEY = "big_market_strategy_rate_table_key_";
         /** 策略概率范围缓存 key 前缀 */
         public static String STRATEGY_RATE_RANGE_KEY = "big_market_strategy_rate_range_key_";
+        /** 规则树缓存 key 前缀 */
+        public static String RULE_TREE_VO_KEY = "rule_tree_vo_key_";
     }
 }

@@ -1,6 +1,7 @@
 package com.zhaoyushi.test.domain;
 
 
+import com.alibaba.fastjson.JSON;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyArmory;
 import com.zhaoyushi.domain.strategy.service.rule.chain.ILogicChain;
 import com.zhaoyushi.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
@@ -42,8 +43,8 @@ public class LogicChainTest {
     @Test
     public void test_LogicChain_rule_blacklist() {
         ILogicChain logicChain = defaultChainFactory.openLogicChain(100001L);
-        Integer awardId = logicChain.logic("user001", 100001L);
-        log.info("测试结果：{}", awardId);
+        DefaultChainFactory.StrategyAwardVO strategyAwardVO = logicChain.logic("user001", 100001L);
+        log.info("测试结果：{}", strategyAwardVO);
     }
 
     @Test
@@ -51,13 +52,8 @@ public class LogicChainTest {
         // 通过反射 mock 规则中的值
         ReflectionTestUtils.setField(ruleWeightLogicChain, "userScore", 49000L);
         ILogicChain logicChain = defaultChainFactory.openLogicChain(100001L);
-        for (int i = 0; i < 200; i++) {
-            Integer awardId = logicChain.logic("xiaofuge", 100001L);
-            if (awardId > 107) {
-                log.info("第{}测试结果：{}", i, awardId);
-            }
-
-        }
+        DefaultChainFactory.StrategyAwardVO strategyAwardVO = logicChain.logic("xiaofuge", 100001L);
+        log.info("测试结果：{}", JSON.toJSONString(strategyAwardVO));
 //        ILogicChain logicChain = defaultChainFactory.openLogicChain(100001L);
 //        Integer awardId = logicChain.logic("xiaofuge", 100001L);
 //        log.info("测试结果：{}", awardId);
@@ -66,8 +62,8 @@ public class LogicChainTest {
     @Test
     public void test_LogicChain_rule_default() {
         ILogicChain logicChain = defaultChainFactory.openLogicChain(100001L);
-        Integer awardId = logicChain.logic("xiaofuge", 100001L);
-        log.info("测试结果：{}", awardId);
+        DefaultChainFactory.StrategyAwardVO strategyAwardVO = logicChain.logic("xiaofuge", 100001L);
+        log.info("测试结果：{}", strategyAwardVO);
     }
 
 }

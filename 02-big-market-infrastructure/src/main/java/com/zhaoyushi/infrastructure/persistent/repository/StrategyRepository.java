@@ -3,14 +3,10 @@ package com.zhaoyushi.infrastructure.persistent.repository;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
-import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
+import com.zhaoyushi.domain.strategy.model.valobj.*;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
-import com.zhaoyushi.infrastructure.persistent.dao.IStrategyAwardDao;
-import com.zhaoyushi.infrastructure.persistent.dao.IStrategyDao;
-import com.zhaoyushi.infrastructure.persistent.dao.IStrategyRuleDao;
-import com.zhaoyushi.infrastructure.persistent.po.Strategy;
-import com.zhaoyushi.infrastructure.persistent.po.StrategyAward;
-import com.zhaoyushi.infrastructure.persistent.po.StrategyRule;
+import com.zhaoyushi.infrastructure.persistent.dao.*;
+import com.zhaoyushi.infrastructure.persistent.po.*;
 import com.zhaoyushi.infrastructure.persistent.redis.IRedisService;
 import com.zhaoyushi.types.common.Constants;
 import com.zhaoyushi.types.enums.ResponseCode;
@@ -37,6 +33,12 @@ public class StrategyRepository implements IStrategyRepository {
     private IRedisService redisService;
     @Resource
     private IStrategyRuleDao strategyRuleDao;
+    @Resource
+    private IRuleTreeDao ruleTreeDao;
+    @Resource
+    private IRuleTreeNodeDao ruleTreeNodeDao;
+    @Resource
+    private IRuleTreeNodeLineDao ruleTreeNodeLineDao;
 
     /**
      * 查询策略奖品列表（带缓存）
@@ -149,6 +151,14 @@ public class StrategyRepository implements IStrategyRepository {
         return strategyRuleDao.queryStrategyRuleValue(strategyRule);
     }
 
+    /**
+     * 查询策略级规则值（奖品ID为空）
+     * <p>委托三参重载方法，awardId 传 null，用于查询策略级别的规则配置（如权重、黑名单规则）。
+     *
+     * @param strategyId 策略ID
+     * @param ruleModel  规则模型，如 rule_weight、rule_blacklist
+     * @return 规则值字符串
+     */
     @Override
     public String queryStrategyRuleValue(Long strategyId, String ruleModel) {
         return queryStrategyRuleValue(strategyId, null, ruleModel);
@@ -213,12 +223,106 @@ public class StrategyRepository implements IStrategyRepository {
                 .build();
     }
 
+    /**
+     * 按策略ID和奖品ID查询奖品关联的规则模型列表
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 奖品规则模型值对象（含规则模型字符串，如 "tree_lock"）
+     */
     @Override
     public StrategyAwardRuleModelVO queryStrategyAwardRuleModel(Long strategyId, Integer awardId) {
         StrategyAward strategyAward = new StrategyAward();
         strategyAward.setStrategyId(strategyId);
         strategyAward.setAwardId(awardId);
         String ruleModels = strategyAwardDao.queryStrategyAwardRuleModel(strategyAward);
+        return StrategyAwardRuleModelVO.builder().ruleModels(ruleModels).build();
+    }
+
+    /**
+     * 按规则树ID查询并组装完整规则树（带缓存）
+     * <p>优先从 Redis 缓存读取；未命中则分别查询规则树主表、节点表、连线表，
+     * 将三张平铺表的数据组装成一棵内存树结构 RuleTreeVO：连线按起点分组挂载到对应节点上，
+     * 节点以 ruleKey 为键存入 treeNodeMap，供决策树引擎按 key 快速定位节点并遍历执行。
+     * 组装完成后回填缓存并返回。
+     *
+     * @param treeId 规则树ID，如 "tree_lock"
+     * @return 规则树值对象；若 treeId 不存在则返回 null
+     */
+    @Override
+    public RuleTreeVO queryRuleTreeVOByTreeId(String treeId) {
+
+        // 1. 优先从缓存获取 "rule_tree_vo_key_treeId"，命中则直接返回，避免重复查库与组装
+        String cacheKey = Constants.RedisKey.RULE_TREE_VO_KEY + treeId;
+        RuleTreeVO ruleTreeVOCache = redisService.getValue(cacheKey);
+        if (null != ruleTreeVOCache) return ruleTreeVOCache;
+
+        // 2. 查询规则树主表、节点表、连线表（三张平铺表）
+        RuleTree ruleTree = ruleTreeDao.queryRuleTreeByTreeId(treeId);
+        // 树主表不存在时直接返回 null，避免后续组装时调用 getTreeId() 抛 NPE
+        if (null == ruleTree) return null;
+        List<RuleTreeNode> ruleTreeNodes = ruleTreeNodeDao.queryRuleTreeNodeListByTreeId(treeId);
+        List<RuleTreeNodeLine> ruleTreeNodeLines = ruleTreeNodeLineDao.queryRuleTreeNodeLineListByTreeId(treeId);
+
+        // 3. 连线 PO 转 VO，并按起点分组：{起点ruleKey -> [该起点的所有出边]}
+        Map<String, List<RuleTreeNodeLineVO>> ruleTreeNodeLineMap = new HashMap<>();
+        for (RuleTreeNodeLine ruleTreeNodeLine : ruleTreeNodeLines) {
+            RuleTreeNodeLineVO ruleTreeNodeLineVO = RuleTreeNodeLineVO.builder()
+                    .treeId(ruleTreeNodeLine.getTreeId())
+                    .ruleNodeFrom(ruleTreeNodeLine.getRuleNodeFrom())
+                    .ruleNodeTo(ruleTreeNodeLine.getRuleNodeTo())
+                    .ruleLimitType(RuleLimitTypeVO.valueOf(ruleTreeNodeLine.getRuleLimitType()))
+                    .ruleLimitValue(RuleLogicCheckTypeVO.valueOf(ruleTreeNodeLine.getRuleLimitValue()))
+                    .build();
+
+            // computeIfAbsent：起点 key 不存在时新建空 List 并存入 Map，存在则复用旧 List，最终得到 {起点ruleKey -> [该起点的所有出边]}
+            List<RuleTreeNodeLineVO> ruleTreeNodeLineVOList = ruleTreeNodeLineMap.computeIfAbsent(ruleTreeNodeLine.getRuleNodeFrom(), k -> new ArrayList<>());
+            ruleTreeNodeLineVOList.add(ruleTreeNodeLineVO);
+        }
+
+        // 4. 节点 PO 转 VO 并挂载出边列表，构建 {ruleKey -> RuleTreeNodeVO}
+        Map<String, RuleTreeNodeVO> treeNodeMap = new HashMap<>();
+        for (RuleTreeNode ruleTreeNode : ruleTreeNodes) {
+            RuleTreeNodeVO ruleTreeNodeVO = RuleTreeNodeVO.builder()
+                    .treeId(ruleTreeNode.getTreeId())
+                    .ruleKey(ruleTreeNode.getRuleKey())
+                    .ruleDesc(ruleTreeNode.getRuleDesc())
+                    .ruleValue(ruleTreeNode.getRuleValue())
+                    .treeNodeLineVOList(ruleTreeNodeLineMap.get(ruleTreeNode.getRuleKey()))
+                    .build();
+            treeNodeMap.put(ruleTreeNode.getRuleKey(), ruleTreeNodeVO);
+        }
+
+        // 5. 构建 RuleTreeVO 并回填缓存
+        RuleTreeVO ruleTreeVODB = RuleTreeVO.builder()
+                .treeId(ruleTree.getTreeId())
+                .treeName(ruleTree.getTreeName())
+                .treeDesc(ruleTree.getTreeDesc())
+                .treeRootRuleNode(ruleTree.getTreeRootRuleKey())
+                .treeNodeMap(treeNodeMap)
+                .build();
+
+        redisService.setValue(cacheKey, ruleTreeVODB);
+        return ruleTreeVODB;
+
+    }
+
+    /**
+     * 按策略ID和奖品ID查询奖品关联的规则模型（判空版本）
+     * <p>与 queryStrategyAwardRuleModel 查询同一字段，区别在于未配置规则模型（ruleModels 为 null）时返回 null，
+     * 供调用方（如 DefaultRaffleStrategy）据此判断是否进入规则树过滤流程。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 奖品规则模型值对象；未配置规则模型时返回 null
+     */
+    @Override
+    public StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(Long strategyId, Integer awardId) {
+        StrategyAward strategyAward = new StrategyAward();
+        strategyAward.setStrategyId(strategyId);
+        strategyAward.setAwardId(awardId);
+        String ruleModels = strategyAwardDao.queryStrategyAwardRuleModels(strategyAward);
+        if (null == ruleModels) return null;
         return StrategyAwardRuleModelVO.builder().ruleModels(ruleModels).build();
     }
 

@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 public class RuleTreeNodeLineVO {
 
     /** 规则树ID：该连线所属的决策树标识 */
-    private Integer treeId;
+    private String treeId;
     /** 规则Key节点 From：连线起点节点标识 */
     private String ruleNodeFrom;
     /** 规则Key节点 To：连线终点节点标识，命中后跳转到该节点 */

@@ -33,7 +33,7 @@ import java.util.Map;
 public class RuleTreeVO {
 
     /** 规则树ID：决策树唯一标识 */
-    private Integer treeId;
+    private String treeId;
     /** 规则树名称：决策树名称，便于日志与可读性 */
     private String treeName;
     /** 规则树描述：决策树业务说明 */

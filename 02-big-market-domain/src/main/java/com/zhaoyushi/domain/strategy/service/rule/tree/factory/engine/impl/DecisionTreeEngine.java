@@ -56,10 +56,10 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
      * @return 最终奖品数据，若整棵树无节点接管则为 null
      */
     @Override
-    public DefaultTreeFactory.StrategyAwardData process(String userId, Long strategyId, Integer awardId) {
+    public DefaultTreeFactory.StrategyAwardVO process(String userId, Long strategyId, Integer awardId) {
 
         // 最终奖品数据，随遍历被叶子节点覆盖
-        DefaultTreeFactory.StrategyAwardData strategyAwardData = null;
+        DefaultTreeFactory.StrategyAwardVO strategyAwardData = null;
 
         // 1. 获取基础信息：根节点 key 与整棵树的节点映射
         String nextNode = ruleTreeVO.getTreeRootRuleNode();
@@ -74,7 +74,7 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
             // 4. 执行节点判断逻辑，得到判定结果与奖品数据
             DefaultTreeFactory.TreeActionEntity logicEntity = logicTreeNode.logic(userId, strategyId, awardId);
             RuleLogicCheckTypeVO ruleLogicCheckTypeVO = logicEntity.getRuleLogicCheckTypeVO();
-            strategyAwardData = logicEntity.getStrategyAwardData();
+            strategyAwardData = logicEntity.getStrategyAwardVO();
             log.info("决策树引擎【{}】treeId:{} node:{} code:{}", ruleTreeVO.getTreeName(), ruleTreeVO.getTreeId(), nextNode, ruleLogicCheckTypeVO.getCode());
 
             // 5. 用判定结果 code 匹配连线，得到下一节点 key，再取出下一节点对象

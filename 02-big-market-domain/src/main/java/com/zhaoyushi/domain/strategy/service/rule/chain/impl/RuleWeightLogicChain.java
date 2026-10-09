@@ -3,6 +3,7 @@ package com.zhaoyushi.domain.strategy.service.rule.chain.impl;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyDispatch;
 import com.zhaoyushi.domain.strategy.service.rule.chain.AbstractLogicChain;
+import com.zhaoyushi.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import com.zhaoyushi.types.common.Constants;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +25,17 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
     public Long userScore = 0L;
 
     /**
-     * 权重责任链过滤；
-     * 1. 权重规则格式；4000:102,103,104,105 5000:102,103,104,105,106,107 6000:102,103,104,105,106,107,108,109
-     * 2. 解析数据格式；判断哪个范围符合用户的特定抽奖范围
+     * 权重责任链过滤
+     * <p>根据用户积分档位在权重规则值中找到符合的奖品范围并随机抽取奖品（接管），
+     * 未命中任何档位时放行交由下一个链节点继续处理。
+     * <p>权重规则格式：4000:102,103,104,105 5000:102,103,104,105,106,107（积分档位:奖品ID列表）。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @return 命中的奖品结果；未命中时返回下一节点的处理结果
      */
     @Override
-    public Integer logic(String userId, Long strategyId) {
+    public DefaultChainFactory.StrategyAwardVO logic(String userId, Long strategyId) {
 
         log.info("抽奖责任链-权重开始 userId: {} strategyId: {} ruleModel: {}", userId, strategyId, ruleModel());
 
@@ -71,7 +77,10 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
         if(nextValue != null){
             Integer awardId = strategyDispatch.getRandomAwardId(strategyId, analyticalValueGroup.get(nextValue));
             log.info("抽奖责任链-权重接管 userId: {} strategyId: {} ruleModel: {} awardId: {}", userId, strategyId, ruleModel(), awardId);
-            return awardId;
+            return DefaultChainFactory.StrategyAwardVO.builder()
+                    .awardId(awardId)
+                    .logicModel(ruleModel())
+                    .build();
         }
 
         // 5. 过滤其他责任链
@@ -106,6 +115,6 @@ public class RuleWeightLogicChain extends AbstractLogicChain {
 
     @Override
     protected String ruleModel() {
-        return "rule_weight";
+        return DefaultChainFactory.LogicModel.RULE_WEIGHT.getCode();
     }
 }

@@ -3,6 +3,7 @@ package com.zhaoyushi.domain.strategy.service.rule.chain.factory;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.domain.strategy.service.rule.chain.ILogicChain;
+import lombok.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -74,6 +75,37 @@ public class DefaultChainFactory {
 
         // 5. 返回链头
         return logicChain;
+    }
+
+
+    /**
+     * 责任链抽奖结果值对象
+     * <p>责任链上每个节点命中奖品时返回该对象，携带命中奖品ID与命中的逻辑模型标识，
+     * 供抽奖主流程判断命中来源（默认/黑名单/权重），据此决定是否继续进入规则树过滤。
+     */
+    @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class StrategyAwardVO {
+        /** 抽奖奖品ID - 内部流转使用 */
+        private Integer awardId;
+        /** 逻辑模型标识：记录本次抽奖命中的责任链节点 code（rule_blacklist/rule_weight/rule_default） */
+        private String logicModel;
+    }
+
+    @Getter
+    @AllArgsConstructor
+    public enum LogicModel {
+
+        RULE_DEFAULT("rule_default", "默认抽奖"),
+        RULE_BLACKLIST("rule_blacklist", "黑名单抽奖"),
+        RULE_WEIGHT("rule_weight", "权重规则"),
+        ;
+
+        private final String code;
+        private final String info;
+
     }
 
 }

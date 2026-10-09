@@ -24,6 +24,6 @@ public interface IDecisionTreeEngine {
      * @param awardId    候选奖品ID
      * @return 最终奖品数据（奖品ID与奖品规则值），未接管时可能为 null
      */
-    DefaultTreeFactory.StrategyAwardData process(String userId, Long strategyId, Integer awardId);
+    DefaultTreeFactory.StrategyAwardVO process(String userId, Long strategyId, Integer awardId);
 
 }

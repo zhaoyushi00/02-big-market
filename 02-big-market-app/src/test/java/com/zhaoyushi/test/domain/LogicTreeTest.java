@@ -44,13 +44,13 @@ public class LogicTreeTest {
     public void test_tree_rule() {
         // 1. 构建 rule_lock 节点：含两根连线（左走 rule_luck_award，右走 rule_stock）
         RuleTreeNodeVO rule_lock = RuleTreeNodeVO.builder()
-                .treeId(100000001)
+                .treeId("100000001")
                 .ruleKey("rule_lock")
                 .ruleDesc("限定用户已完成N次抽奖后解锁")
                 .ruleValue("1")
                 .treeNodeLineVOList(new ArrayList<RuleTreeNodeLineVO>() {{
                     add(RuleTreeNodeLineVO.builder()
-                            .treeId(100000001)
+                            .treeId("100000001")
                             .ruleNodeFrom("rule_lock")
                             .ruleNodeTo("rule_luck_award")
                             .ruleLimitType(RuleLimitTypeVO.EQUAL)
@@ -58,7 +58,7 @@ public class LogicTreeTest {
                             .build());
 
                     add(RuleTreeNodeLineVO.builder()
-                            .treeId(100000001)
+                            .treeId("100000001")
                             .ruleNodeFrom("rule_lock")
                             .ruleNodeTo("rule_stock")
                             .ruleLimitType(RuleLimitTypeVO.EQUAL)
@@ -69,7 +69,7 @@ public class LogicTreeTest {
 
         // 2. 构建 rule_luck_award 叶子节点（treeNodeLineVOList 为 null，无下一跳）
         RuleTreeNodeVO rule_luck_award = RuleTreeNodeVO.builder()
-                .treeId(100000001)
+                .treeId("100000001")
                 .ruleKey("rule_luck_award")
                 .ruleDesc("限定用户已完成N次抽奖后解锁")
                 .ruleValue("1")
@@ -78,13 +78,13 @@ public class LogicTreeTest {
 
         // 3. 构建 rule_stock 节点：含一根连线（判定 TAKE_OVER 时走 rule_luck_award）
         RuleTreeNodeVO rule_stock = RuleTreeNodeVO.builder()
-                .treeId(100000001)
+                .treeId("100000001")
                 .ruleKey("rule_stock")
                 .ruleDesc("库存处理规则")
                 .ruleValue(null)
                 .treeNodeLineVOList(new ArrayList<RuleTreeNodeLineVO>() {{
                     add(RuleTreeNodeLineVO.builder()
-                            .treeId(100000001)
+                            .treeId("100000001")
                             .ruleNodeFrom("rule_lock")
                             .ruleNodeTo("rule_luck_award")
                             .ruleLimitType(RuleLimitTypeVO.EQUAL)
@@ -95,7 +95,7 @@ public class LogicTreeTest {
 
         // 4. 组装决策树：设置树ID、名称、描述与根节点
         RuleTreeVO ruleTreeVO = new RuleTreeVO();
-        ruleTreeVO.setTreeId(100000001);
+        ruleTreeVO.setTreeId("100000001");
         ruleTreeVO.setTreeName("决策树规则；增加dall-e-3画图模型");
         ruleTreeVO.setTreeDesc("决策树规则；增加dall-e-3画图模型");
         ruleTreeVO.setTreeRootRuleNode("rule_lock");
@@ -113,7 +113,7 @@ public class LogicTreeTest {
         IDecisionTreeEngine treeEngine = defaultTreeFactory.openLogicTree(ruleTreeVO);
 
         // 7. 执行决策树并打印最终奖品结果
-        DefaultTreeFactory.StrategyAwardData data = treeEngine.process("zhaoyushi", 100001L, 100);
+        DefaultTreeFactory.StrategyAwardVO data = treeEngine.process("zhaoyushi", 100001L, 100);
         log.info("测试结果：{}", JSON.toJSONString(data));
 
     }

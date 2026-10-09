@@ -3,6 +3,7 @@ package com.zhaoyushi.domain.strategy.repository;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
+import com.zhaoyushi.domain.strategy.model.valobj.RuleTreeVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 
 import java.math.BigDecimal;
@@ -97,6 +98,15 @@ public interface IStrategyRepository {
      * @return 规则值字符串
      */
     String queryStrategyRuleValue(Long strategyId, Integer awardId, String ruleModel);
+
+    /**
+     * 查询策略级规则值（奖品ID为空）
+     * <p>委托三参重载方法，awardId 传 null，用于查询策略级别的规则配置（如权重、黑名单规则）。
+     *
+     * @param strategyId 策略ID
+     * @param ruleModel  规则模型标识，如 rule_weight、rule_blacklist
+     * @return 规则值字符串
+     */
     String queryStrategyRuleValue(Long strategyId, String ruleModel);
     /**
      * 查询奖品关联的规则模型
@@ -107,4 +117,23 @@ public interface IStrategyRepository {
      * @return 奖品规则模型值对象（含规则模型列表）
      */
     StrategyAwardRuleModelVO queryStrategyAwardRuleModel(Long strategyId, Integer awardId);
+
+    /**
+     * 按规则树ID查询并组装完整规则树（带缓存）
+     * <p>优先从 Redis 缓存读取；未命中则查询规则树主表、节点表、连线表并组装成内存树结构 RuleTreeVO。
+     *
+     * @param treeId 规则树ID，如 "tree_lock"
+     * @return 规则树值对象；若 treeId 不存在则返回 null
+     */
+    RuleTreeVO queryRuleTreeVOByTreeId(String treeId);
+
+    /**
+     * 按策略ID和奖品ID查询奖品关联的规则模型（判空版本）
+     * <p>未配置规则模型时返回 null，供调用方据此判断是否进入规则树过滤流程。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 奖品规则模型值对象；未配置规则模型时返回 null
+     */
+    StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(Long strategyId, Integer awardId);
 }

@@ -23,7 +23,7 @@ import java.util.List;
 public class RuleTreeNodeVO {
 
     /** 规则树ID：该节点所属的决策树标识 */
-    private Integer treeId;
+    private String treeId;
     /** 规则Key：节点唯一标识，需与对应逻辑节点 Bean 名保持一致（如 rule_lock） */
     private String ruleKey;
     /** 规则描述：该节点规则的业务含义说明 */
