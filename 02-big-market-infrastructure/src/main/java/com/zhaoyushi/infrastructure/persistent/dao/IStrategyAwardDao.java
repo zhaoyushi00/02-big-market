@@ -40,4 +40,6 @@ public interface IStrategyAwardDao {
      * @return 规则模型字符串，如 "tree_lock"；未配置时可能为 null
      */
     String queryStrategyAwardRuleModels(StrategyAward strategyAward);
+
+    void updateStrategyAwardStock(StrategyAward strategyAward);
 }

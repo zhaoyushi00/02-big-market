@@ -5,6 +5,7 @@ import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleTreeVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
+import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -136,4 +137,29 @@ public interface IStrategyRepository {
      * @return 奖品规则模型值对象；未配置规则模型时返回 null
      */
     StrategyAwardRuleModelVO queryStrategyAwardRuleModelVO(Long strategyId, Integer awardId);
+
+    /**
+     * 缓存奖品初始库存
+     * <p>在策略装配阶段，将每个奖品的初始库存写入 Redis 原子计数器（AtomicLong），
+     * 供后续抽奖时通过 decr 原子扣减，保证高并发下库存扣减不超卖。
+     *
+     * @param cacheKay   库存缓存 Key（由 策略ID + 下划线 + 奖品ID 拼接而成）
+     * @param awardCount 奖品初始库存数量
+     */
+    void cacheStrategyAwardCount(String cacheKay, Integer awardCount);
+
+    /**
+     * 扣减奖品库存
+     * <p>对指定库存缓存 Key 执行 decr 原子扣减，返回扣减是否成功（即是否还有剩余库存可扣）。
+     *
+     * @param cacheKay 库存缓存 Key
+     * @return 扣减成功返回 true；库存不足（扣减后为负数）返回 false
+     */
+    Boolean subtractionAwardStock(String cacheKay);
+
+    void awardStockConsumeSendQueue(StrategyAwardStockKeyVO strategyAwardStockKeyVO);
+
+    StrategyAwardStockKeyVO takeQueueValue();
+
+    void updateStrategyAwardStock(Long strategyId, Integer awardId);
 }

@@ -4,11 +4,13 @@ import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
+import com.zhaoyushi.types.common.Constants;
 import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.css.Counter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,9 +31,21 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     public boolean assembleLotteryStrategy(Long strategyId) {
         //1、查该策略下的所有奖品，先装配一张"总表"
         List<StrategyAwardEntity> strategyAwardEntities = repository.queryStrategyAwardList(strategyId);
+
+        // 2、缓存奖品库存【用于后续抽奖时通过 decr 原子扣减库存，防止超卖】
+        for (StrategyAwardEntity strategyAwardEntity : strategyAwardEntities){
+            // 取出当前奖品的奖品ID
+            Integer awardId = strategyAwardEntity.getAwardId();
+            // 取出当前奖品的初始库存数量
+            Integer awardCount = strategyAwardEntity.getAwardCount();
+            // 将「策略ID_奖品ID」对应的初始库存写入 Redis 原子计数器
+            cacheStrategyAwardCount(awardId, strategyId, awardCount);
+        }
+
+        //3.1、默认装配配置【全量抽奖概率】
         assembleLotteryStrategy(String.valueOf(strategyId), strategyAwardEntities);
 
-        //2、权重策略配置 - 适用于 rule_weight— 权重规则配置
+        //3.2、权重策略配置 - 适用于 rule_weight— 权重规则配置
         StrategyEntity strategyEntity = repository.queryStrategyEntityByStrategyId(strategyId);
         String ruleWeight = strategyEntity.getRuleWeight();
         if(null == ruleWeight) return true;// 没配权重 → 装配完就结束
@@ -62,6 +76,23 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         }
 
         return true;
+    }
+
+    /**
+     * 缓存奖品初始库存
+     * <p>拼接库存缓存 Key，并委托仓储层将奖品初始库存写入 Redis 原子计数器，
+     * 供抽奖时通过 decr 原子扣减。注意：只在库存缓存不存在时初始化，避免重复装配时覆盖已扣减的库存。
+     *
+     * @param awardId    奖品ID
+     * @param strategyId 策略ID
+     * @param awardCount 奖品初始库存数量
+     */
+    private void cacheStrategyAwardCount(Integer awardId, Long strategyId, Integer awardCount) {
+        // 拼接库存缓存 Key：strategy_award_count_key_策略ID_奖品ID
+        String cacheKay = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
+        // 委托仓储层将初始库存写入 Redis 原子计数器
+        repository.cacheStrategyAwardCount(cacheKay, awardCount);
+
     }
 
     private void assembleLotteryStrategy(String key, List<StrategyAwardEntity> strategyAwardEntities){
@@ -147,5 +178,21 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
         int rateRange = repository.getRateRange(key);
         // 通过生成的随机值，获取概率值奖品查找表的结果
         return repository.getStrategyAwardAssemble(key, new SecureRandom().nextInt(rateRange));
+    }
+
+    /**
+     * 扣减奖品缓存库存
+     * <p>根据策略ID和奖品ID拼接库存缓存 Key，委托仓储层对 Redis 中的奖品库存执行原子扣减。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 扣减成功返回 true；库存不足返回 false
+     */
+    @Override
+    public Boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+        // 拼接库存缓存 Key：strategy_award_count_key_策略ID_奖品ID
+        String cacheKay = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
+        // 委托仓储层扣减库存，并返回扣减结果
+        return repository.subtractionAwardStock(cacheKay);
     }
 }

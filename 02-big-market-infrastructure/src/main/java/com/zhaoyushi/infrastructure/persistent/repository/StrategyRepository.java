@@ -12,6 +12,9 @@ import com.zhaoyushi.types.common.Constants;
 import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RBlockingQueue;
+import org.redisson.api.RDelayedQueue;
 import org.redisson.api.RMap;
 import org.springframework.stereotype.Repository;
 
@@ -20,8 +23,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /* 策略仓储实现 */
+// 通过 Lombok 自动生成 log 日志对象，供下方「扣减奖品库存」方法打印日志使用
+@Slf4j
 @Repository
 public class StrategyRepository implements IStrategyRepository {
 
@@ -324,6 +330,94 @@ public class StrategyRepository implements IStrategyRepository {
         String ruleModels = strategyAwardDao.queryStrategyAwardRuleModels(strategyAward);
         if (null == ruleModels) return null;
         return StrategyAwardRuleModelVO.builder().ruleModels(ruleModels).build();
+    }
+
+    /**
+     * 缓存奖品初始库存
+     * <p>先判断库存缓存是否已存在，不存在时再写入，避免重复装配时覆盖已被扣减的库存。
+     *
+     * @param cacheKay   库存缓存 Key
+     * @param awardCount 奖品初始库存数量
+     */
+    @Override
+    public void cacheStrategyAwardCount(String cacheKay, Integer awardCount) {
+        // 读取当前库存缓存值，判断是否已初始化
+//        Long cacheAwardCount = redisService.getAtomicLong(cacheKay);
+//        // 已初始化则直接返回，避免覆盖已扣减的库存
+//        if (null != cacheAwardCount) return;
+        if (redisService.isExists(cacheKay)) return;
+        // 未初始化则写入奖品初始库存
+        redisService.setAtomicLong(cacheKay, awardCount);
+    }
+
+    /**
+     * 扣减奖品库存
+     * <p>对库存缓存 Key 执行 decr 原子扣减；扣减后为负数说明库存已耗尽，回写为 0 并返回 false。
+     * 扣减成功后通过 setNx 抢占一个「库存Key_剩余量」的锁 Key，返回锁是否抢占成功。
+     *
+     * @param cacheKay 库存缓存 Key
+     * @return 扣减且加锁成功返回 true；库存不足或加锁失败返回 false
+     */
+    @Override
+    public Boolean subtractionAwardStock(String cacheKay) {
+        // decr 原子扣减库存，并返回扣减后的剩余量
+        long surplus = redisService.decr(cacheKay);
+        // 剩余量为负数说明库存已耗尽
+        if(surplus < 0){
+            // 回写为 0，避免库存变成负数
+            redisService.setValue(cacheKay, 0);
+            // 返回 false 表示扣减失败（无库存可扣）
+            return false;
+        }
+        // 拼接锁 Key：库存Key_剩余量，用于后续业务唯一性校验
+        String lockKey = cacheKay + Constants.UNDERLINE + surplus;
+        // 通过 setNx 抢占锁 Key，抢占成功表示本次扣减有效
+        // 将 key 的值设为 value，当且仅当 key 不存在。
+        // 若给定的 key 已经存在，则 SETNX 不做任何动作。
+        // setNx 返回 false 只会在同一个 lockKey 被第二次 setNx 时发生，也就是"同一个剩余量被处理了两次"
+        // 就是代替了数据库判空的功能，不用多次查询数据库了
+        Boolean lock = redisService.setNx(lockKey);
+        // 抢占失败时记录日志，便于排查
+        if(!lock){
+            log.info("策略奖品库存加锁失败{}", lockKey);
+        }
+        // 返回锁抢占结果
+        return lock;
+    }
+
+    /**
+     * 奖品库存消费发送延时队列
+     * <p>库存扣减成功后，将「策略ID + 奖品ID」库存标识写入 Redis 延时队列，
+     * 延迟 3 秒后被 trigger 模块的 UpdateAwardStockJob 消费，异步回写数据库库存记录，
+     * 实现 Redis 与数据库的最终一致，避免每次扣减都同步写库造成性能压力。
+     *
+     * @param strategyAwardStockKeyVO 策略奖品库存Key标识（strategyId + awardId）
+     */
+    @Override
+    public void awardStockConsumeSendQueue(StrategyAwardStockKeyVO strategyAwardStockKeyVO) {
+        // 取库存消费队列的缓存 Key
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_QUERY_KEY;
+        // 获取阻塞队列，作为延时队列的底层目标队列
+        RBlockingQueue<StrategyAwardStockKeyVO> blockingQueue = redisService.getBlockingQueue(cacheKey);
+        // 基于阻塞队列获取延时队列
+        RDelayedQueue<StrategyAwardStockKeyVO> delayedQueue = redisService.getDelayedQueue(blockingQueue);
+        // 投递库存标识到延时队列，延迟 3 秒后进入阻塞队列等待消费
+        delayedQueue.offer(strategyAwardStockKeyVO, 3, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public StrategyAwardStockKeyVO takeQueueValue() {
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_QUERY_KEY;
+        RBlockingQueue<StrategyAwardStockKeyVO> destinationQueue = redisService.getBlockingQueue(cacheKey);
+        return destinationQueue.poll();
+    }
+
+    @Override
+    public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
+        StrategyAward strategyAward = new StrategyAward();
+        strategyAward.setAwardId(awardId);
+        strategyAward.setStrategyId(strategyId);
+        strategyAwardDao.updateStrategyAwardStock(strategyAward);
     }
 
 }

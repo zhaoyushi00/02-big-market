@@ -19,4 +19,14 @@ public interface IStrategyDispatch {
      * @return 抽奖结果（奖品ID）
      */
     Integer getRandomAwardId(Long strategyId, String ruleWeightValue);
+
+    /**
+     * 扣减奖品缓存库存
+     * <p>根据策略ID和奖品ID拼接库存缓存 Key，委托仓储层对 Redis 中的奖品库存执行原子扣减。
+     *
+     * @param strategyId 策略ID
+     * @param awardId    奖品ID
+     * @return 扣减成功返回 true；库存不足返回 false
+     */
+    Boolean subtractionAwardStock(Long strategyId, Integer awardId);
 }

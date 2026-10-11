@@ -6,6 +6,7 @@ import com.zhaoyushi.domain.strategy.model.entity.RuleMatterEntity;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleTreeVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
+import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.domain.strategy.service.AbstractRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyDispatch;
@@ -88,4 +89,13 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
         return treeEngine.process(userId, strategyId, awardId);
     }
 
+    @Override
+    public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
+        return repository.takeQueueValue();
+    }
+
+    @Override
+    public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
+        repository.updateStrategyAwardStock(strategyId, awardId);
+    }
 }

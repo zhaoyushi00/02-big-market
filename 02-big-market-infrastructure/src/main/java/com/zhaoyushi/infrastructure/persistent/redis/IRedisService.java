@@ -246,4 +246,30 @@ public interface IRedisService {
      */
     <T> RBloomFilter<T> getBloomFilter(String key);
 
+    /**
+     * 获取 Redis 原子计数器（AtomicLong）的当前值
+     * <p>按 key 获取 Redisson AtomicLong 的值，用于读取奖品库存等原子计数。
+     *
+     * @param cacheKay 原子计数器 key
+     * @return 计数器当前值；key 不存在时返回 null
+     */
+    Long getAtomicLong(String cacheKay);
+
+    /**
+     * 设置 Redis 原子计数器（AtomicLong）的值
+     * <p>按 key 初始化 Redisson AtomicLong 的值，用于写入奖品初始库存。
+     *
+     * @param cacheKay   原子计数器 key
+     * @param awardCount 要设置的计数器值（奖品初始库存）
+     */
+    void setAtomicLong(String cacheKay, Integer awardCount);
+
+    /**
+     * 尝试原子设置 key（SET NX）
+     * <p>仅当 key 不存在时写入，返回是否写入成功，可用于实现分布式锁或防重复处理。
+     *
+     * @param lockKey 要写入的 key
+     * @return 写入成功返回 true；key 已存在返回 false
+     */
+    Boolean setNx(String lockKey);
 }

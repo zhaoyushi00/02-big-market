@@ -4,9 +4,11 @@ package com.zhaoyushi.test.domain;
 import com.alibaba.fastjson.JSON;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleFactorEntity;
+import com.zhaoyushi.domain.strategy.service.IRaffleStock;
 import com.zhaoyushi.domain.strategy.service.IRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyArmory;
 import com.zhaoyushi.domain.strategy.service.rule.chain.impl.RuleWeightLogicChain;
+import com.zhaoyushi.domain.strategy.service.rule.tree.impl.RuleLockLogicTreeNode;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -15,6 +17,8 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.concurrent.CountDownLatch;
 
 //抽奖策略测试
 @Slf4j
@@ -28,21 +32,27 @@ public class RaffleStrategyTest {
     private IStrategyArmory strategyArmory;
     @Resource
     private RuleWeightLogicChain weightLogicChain;
+    @Resource
+    private RuleLockLogicTreeNode ruleLockLogicTreeNode;
+
+    @Resource
+    private IRaffleStock raffleStock;
 
     @Before
     public void setUp() {
         // 策略装配 100001、100002、100003
-        log.info("测试结果：{}", strategyArmory.assembleLotteryStrategy(100001L));
+//        log.info("测试结果：{}", strategyArmory.assembleLotteryStrategy(100001L));
 //        log.info("测试结果：{}", strategyArmory.assembleLotteryStrategy(100002L));
 //        log.info("测试结果：{}", strategyArmory.assembleLotteryStrategy(100003L));
         log.info("测试结果：{}", strategyArmory.assembleLotteryStrategy(100006L));
 
         // 通过反射 mock 规则中的值
         ReflectionTestUtils.setField(weightLogicChain, "userScore", 40500L);
+        ReflectionTestUtils.setField(ruleLockLogicTreeNode, "userRaffleCount", 10L);
     }
 
     @Test
-    public void test_performRaffle() {
+    public void test_performRaffle() throws InterruptedException {
         for (int i = 0; i < 5; i++) {
             RaffleFactorEntity raffleFactorEntity = RaffleFactorEntity.builder()
                     .userId("zhaoyushi")
@@ -63,6 +73,7 @@ public class RaffleStrategyTest {
 //
 //        log.info("请求参数：{}", JSON.toJSONString(raffleFactorEntity));
 //        log.info("测试结果：{}", JSON.toJSONString(raffleAwardEntity));
+        new CountDownLatch(1).await();
     }
 
     @Test

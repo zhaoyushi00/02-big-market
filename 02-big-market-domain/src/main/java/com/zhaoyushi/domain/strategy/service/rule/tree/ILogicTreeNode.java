@@ -38,6 +38,6 @@ public interface ILogicTreeNode {
      * @param awardId    候选奖品ID
      * @return 节点判定结果与奖品数据封装
      */
-    DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId);
+    DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue);
 
 }

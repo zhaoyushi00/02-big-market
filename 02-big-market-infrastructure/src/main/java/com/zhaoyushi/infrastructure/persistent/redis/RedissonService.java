@@ -157,5 +157,45 @@ public class RedissonService implements IRedisService {
         return redissonClient.getBloomFilter(key);
     }
 
+    /**
+     * 获取 Redis 原子计数器（AtomicLong）的当前值
+     *
+     * @param cacheKay 原子计数器 key
+     * @return 计数器当前值；key 不存在时返回 null
+     */
+    @Override
+    public Long getAtomicLong(String cacheKay) {
+        // 通过 Redisson 获取指定 key 的 AtomicLong 对象，并读取其当前值
+        return redissonClient.getAtomicLong(cacheKay).get();
+    }
+
+    /**
+     * 设置 Redis 原子计数器（AtomicLong）的值
+     *
+     * @param cacheKay   原子计数器 key
+     * @param awardCount 要设置的计数器值（奖品初始库存）
+     */
+    @Override
+    public void setAtomicLong(String cacheKay, Integer awardCount) {
+        // 通过 Redisson 获取指定 key 的 AtomicLong 对象，并写入初始值
+        redissonClient.getAtomicLong(cacheKay).set(awardCount);
+    }
+
+    /**
+     * 尝试原子设置 key（SET NX）
+     *
+     * @param lockKey 要写入的 key
+     * @return 写入成功返回 true；key 已存在返回 false
+     *
+     * 将 key 的值设为 value，当且仅当 key 不存在。
+     * 若给定的 key 已经存在，则 SETNX 不做任何动作。
+     *
+     */
+    @Override
+    public Boolean setNx(String lockKey) {
+        // 仅当 key 不存在时写入占位值 "lock"，写入成功表示抢占成功
+        return redissonClient.getBucket(lockKey).trySet("lock");
+    }
+
 
 }
