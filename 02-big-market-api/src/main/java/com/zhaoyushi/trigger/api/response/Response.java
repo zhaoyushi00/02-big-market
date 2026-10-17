@@ -1,4 +1,4 @@
-package com.zhaoyushi.api.response;
+package com.zhaoyushi.trigger.api.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

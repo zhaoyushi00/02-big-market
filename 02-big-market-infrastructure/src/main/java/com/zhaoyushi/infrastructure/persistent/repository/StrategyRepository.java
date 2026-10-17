@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.zhaoyushi.types.enums.ResponseCode.UN_ASSEMBLED_STRATEGY_ARMORY;
+
 /* 策略仓储实现 */
 // 通过 Lombok 自动生成 log 日志对象，供下方「扣减奖品库存」方法打印日志使用
 @Slf4j
@@ -65,7 +67,7 @@ public class StrategyRepository implements IStrategyRepository {
         * 拼接缓存键。STRATEGY_AWARD_KEY 的值是 "big_market_strategy_award_key_"。
         * 例如 strategyId = 10001 时，最终 key 为 big_market_strategy_award_key_10001，保证不同策略的缓存互不干扰。
         * */
-        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY + strategyId;
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + strategyId;
         //缓存优先：能命中缓存就不查数据库，减少 DB 压力、提升响应速度。
         List<StrategyAwardEntity> strategyAwardEntities = redisService.getValue(cacheKey);
 
@@ -83,6 +85,9 @@ public class StrategyRepository implements IStrategyRepository {
                         .awardCount(strategyAward.getAwardCount())
                         .awardCountSurplus(strategyAward.getAwardCountSurplus())
                         .awardRate(strategyAward.getAwardRate())
+                        .awardSubtitle(strategyAward.getAwardSubtitle())
+                        .awardTitle(strategyAward.getAwardTitle())
+                        .sort(strategyAward.getSort())
                         .build();
             strategyAwardEntities.add(strategyAwardEntity);
         }
@@ -115,12 +120,11 @@ public class StrategyRepository implements IStrategyRepository {
      */
     @Override
     public int getRateRange(Long strategyId) {
-        Integer rateRange = redisService.getValue(Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId);
-        if (rateRange == null) {
-            throw new AppException(ResponseCode.STRATEGY_RULE_WEIGHT_IS_NULL.getCode(),
-                    "策略未装配，Redis 中不存在概率范围 key：" + strategyId);
+        String cacheKey = Constants.RedisKey.STRATEGY_RATE_RANGE_KEY + strategyId;
+        if (!redisService.isExists(cacheKey)) {
+            throw new AppException(UN_ASSEMBLED_STRATEGY_ARMORY.getCode(), cacheKey + Constants.COLON + UN_ASSEMBLED_STRATEGY_ARMORY.getInfo());
         }
-        return rateRange;
+        return redisService.getValue(cacheKey);
     }
 
     /**
@@ -418,6 +422,34 @@ public class StrategyRepository implements IStrategyRepository {
         strategyAward.setAwardId(awardId);
         strategyAward.setStrategyId(strategyId);
         strategyAwardDao.updateStrategyAwardStock(strategyAward);
+    }
+
+    @Override
+    public StrategyAwardEntity queryStrategyAwardEntity(Long strategyId, Integer awardId) {
+        // 优先从缓存获取
+        String cacheKey = Constants.RedisKey.STRATEGY_AWARD_KEY + strategyId + Constants.UNDERLINE + awardId;
+        StrategyAwardEntity strategyAwardEntity = redisService.getValue(cacheKey);
+        if (null != strategyAwardEntity) return strategyAwardEntity;
+        // 查询数据
+        StrategyAward strategyAwardReq = new StrategyAward();
+        strategyAwardReq.setStrategyId(strategyId);
+        strategyAwardReq.setAwardId(awardId);
+        StrategyAward strategyAwardRes = strategyAwardDao.queryStrategyAward(strategyAwardReq);
+        // 转换数据
+        strategyAwardEntity = StrategyAwardEntity.builder()
+                .strategyId(strategyAwardRes.getStrategyId())
+                .awardId(strategyAwardRes.getAwardId())
+                .awardTitle(strategyAwardRes.getAwardTitle())
+                .awardSubtitle(strategyAwardRes.getAwardSubtitle())
+                .awardCount(strategyAwardRes.getAwardCount())
+                .awardCountSurplus(strategyAwardRes.getAwardCountSurplus())
+                .awardRate(strategyAwardRes.getAwardRate())
+                .sort(strategyAwardRes.getSort())
+                .build();
+        // 缓存结果
+        redisService.setValue(cacheKey, strategyAwardEntity);
+        // 返回数据
+        return strategyAwardEntity;
     }
 
 }

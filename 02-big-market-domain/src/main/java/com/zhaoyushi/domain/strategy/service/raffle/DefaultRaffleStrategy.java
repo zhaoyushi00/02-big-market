@@ -3,12 +3,15 @@ package com.zhaoyushi.domain.strategy.service.raffle;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleFactorEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RuleActionEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RuleMatterEntity;
+import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleTreeVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.domain.strategy.service.AbstractRaffleStrategy;
+import com.zhaoyushi.domain.strategy.service.IRaffleAward;
+import com.zhaoyushi.domain.strategy.service.IRaffleStock;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyDispatch;
 import com.zhaoyushi.domain.strategy.service.rule.chain.ILogicChain;
 import com.zhaoyushi.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
@@ -32,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
+public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRaffleAward, IRaffleStock {
 
     //在创建对象时，接收外部传入的依赖，并转交给父类完成初始化
     //DefaultChainFactory defaultChainFactory：责任链工厂，负责根据策略配置组装责任链。
@@ -97,5 +100,10 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy {
     @Override
     public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
         repository.updateStrategyAwardStock(strategyId, awardId);
+    }
+
+    @Override
+    public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
+        return repository.queryStrategyAwardList(strategyId);
     }
 }

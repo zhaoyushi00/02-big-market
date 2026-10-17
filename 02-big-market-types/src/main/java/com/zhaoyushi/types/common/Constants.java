@@ -21,6 +21,7 @@ public class Constants {
         public static String STRATEGY_KEY = "big_market_strategy_key_";
         /** 策略奖品列表缓存 key 前缀 */
         public static String STRATEGY_AWARD_KEY = "big_market_strategy_award_key_";
+        public static String STRATEGY_AWARD_LIST_KEY = "big_market_strategy_award_list_key_";
         /** 策略概率查找表缓存 key 前缀 */
         public static String STRATEGY_RATE_TABLE_KEY = "big_market_strategy_rate_table_key_";
         /** 策略概率范围缓存 key 前缀 */
