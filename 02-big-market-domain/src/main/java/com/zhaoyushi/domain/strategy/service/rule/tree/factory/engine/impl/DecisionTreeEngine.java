@@ -67,7 +67,9 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
 
         // 2. 取出起始节点（根节点记录了第一个要执行的规则）
         RuleTreeNodeVO ruleTreeNode = treeNodeMap.get(nextNode);
-        while (null != nextNode){
+        // 循环条件同时校验 ruleTreeNode：当连线/根节点指向了 rule_tree_node 中不存在的 ruleKey 时，
+        // treeNodeMap.get(nextNode) 会返回 null，此时应优雅终止遍历而非继续调用 ruleTreeNode 抛 NPE
+        while (null != nextNode && null != ruleTreeNode){
             // 3. 用当前节点的 ruleKey 从节点组里取出对应的逻辑实现（如 rule_lock → RuleLockLogicTreeNode）
             ILogicTreeNode logicTreeNode = logicTreeNodeGroup.get(ruleTreeNode.getRuleKey());
             String ruleValue = ruleTreeNode.getRuleValue();
