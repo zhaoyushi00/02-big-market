@@ -1,5 +1,4 @@
 # /usr/local/bin/docker-compose -f /docs/dev-ops/environment/environment-docker-compose-2.4.yml up -d
-version: '3.8'
 # docker-compose -f docker-compose-app.yml up -d
 # 你需要修改system为你自身系统的仓库名
 services:
@@ -10,8 +9,11 @@ services:
     ports:
       - "8091:8091"
     environment:
-      - TZ=PRC
-      - SERVER_PORT=8091
+      TZ: PRC
+      SERVER_PORT: 8091
+      # 容器内通过 host.docker.internal 访问宿主机上的 MySQL/Redis
+      REDIS_SDK_CONFIG_HOST: host.docker.internal
+      SPRING_DATASOURCE_URL: "jdbc:mysql://host.docker.internal:3306/big_market?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true"
     volumes:
       - ./log:/data/log
     logging:
@@ -21,6 +23,27 @@ services:
         max-file: "3"
     networks:
       - my-network
+  02-big-market-front:
+    container_name: 02-big-market-front
+    # 使用本地前端项目构建镜像（不再拉取 fuzhengwei 公共镜像）
+    build:
+      context: ../../../../02-bigmarket-front
+      dockerfile: Dockerfile
+      args:
+        # NEXT_PUBLIC_ 前缀变量会在 next build 时内联进前端代码，必须通过 build args 注入
+        # 本地部署用 localhost:8091；部署到阿里云/服务器时请改为 http://服务器公网IP:8091
+        NEXT_PUBLIC_API_HOST_URL: http://localhost:8091
+    image: zhaoyushi00/02-bigmarket-front:1.0
+    restart: always
+    networks:
+      - my-network
+    ports:
+      - 3000:3000
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://0.0.0.0:3000/" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
 
 networks:
   my-network:

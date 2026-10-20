@@ -53,7 +53,7 @@ public class IRaffleController implements IRaffleService {
     @RequestMapping(value = "strategy_armory", method = RequestMethod.GET)
     // 覆盖接口 IRaffleService 中声明的装配方法
     @Override
-    public Response<Boolean> strategyArmory(Long strategyId) {
+    public Response<Boolean> strategyArmory(@RequestParam("strategyId") Long strategyId) {
 
         try {
             // 记录抽奖策略装配开始的日志，包含策略ID
