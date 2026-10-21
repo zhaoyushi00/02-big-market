@@ -1,0 +1,58 @@
+# =====================================================================
+# 服务器部署专用：从 Docker Hub 拉取前后端镜像
+# 使用方式：docker compose -f docker-compose-app-dockerhub.yml up -d
+# 注意：请将下方两处 image 的 tag 替换为 Docker Hub 仓库 zhaoyushi00/xfg 中的实际 tag
+# =====================================================================
+services:
+  02-big-market:
+    # 后端镜像，请替换为 Docker Hub 上的实际 tag（如 zhaoyushi00/xfg:02-big-market-app）
+    image: zhaoyushi00/02-big-market-app:latest
+    container_name: 02-big-market
+    restart: always
+    ports:
+      - "8091:8091"
+    environment:
+      - TZ=PRC
+      - SERVER_PORT=8091
+      - APP_CONFIG_API_VERSION=v1
+      - APP_CONFIG_CROSS_ORIGIN=*
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/big_market?serverTimezone=UTC&characterEncoding=utf8&autoReconnect=true&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_HIKARI_POOL_NAME=Retail_HikariCP
+      - REDIS_SDK_CONFIG_HOST=redis
+      - REDIS_SDK_CONFIG_PORT=6379
+    volumes:
+      - ./log:/data/log
+    networks:
+      - my-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  02-big-market-front:
+    # 前端镜像，请替换为 Docker Hub 上的实际 tag（如 zhaoyushi00/xfg:02-bigmarket-front）
+    # 注意：前端请求后端 API 的地址是在「构建镜像时」内联进代码的，
+    # 请确保该镜像构建时 NEXT_PUBLIC_API_HOST_URL 已指向服务器公网地址（如 http://47.114.39.182:8091）
+    image: zhaoyushi00/02-bigmarket-front:latest
+    container_name: 02-big-market-front
+    restart: always
+    networks:
+      - my-network
+    ports:
+      - 3000:3000
+    environment:
+      - API_HOST_URL=http://127.0.0.1:8091
+      - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://0.0.0.0:3000/" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+
+networks:
+  my-network:
+    driver: bridge
