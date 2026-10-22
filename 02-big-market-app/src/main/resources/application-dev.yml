@@ -25,23 +25,62 @@ thread:
         block-queue-size: 5000
         policy: CallerRunsPolicy
 
-# 数据库配置；启动时配置数据库资源信息
-spring:
-  datasource:
-    username: root
-    password: 962464
-    url: jdbc:mysql://127.0.0.1:3306/big_market?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  hikari:
-    pool-name: Retail_HikariCP
-    minimum-idle: 15 #最小空闲连接数量
-    idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
-    maximum-pool-size: 25 #连接池最大连接数，默认是10
-    auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
-    max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
-    connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
-    connection-test-query: SELECT 1
-  type: com.zaxxer.hikari.HikariDataSource
+# 多数据源路由配置，库数量 * 表数量 为2的次幂，如2库4表
+# mysql 5.x 配置 driver-class-name: com.mysql.jdbc.Driver    mysql-connector-java 5.1.34
+# mysql 8.x 配置 driver-class-name: com.mysql.cj.jdbc.Driver mysql-connector-java 8.0.22
+mini-db-router:
+  jdbc:
+    datasource:
+      dbCount: 2 # 库的数量
+      tbCount: 4 # 表的数量
+      default: db00 # 默认数据源，路由未命中分库时回退使用
+      routerKey: userId # 分库分表路由键，依据该字段值计算目标库表
+      list: db01,db02 # 分库数据源列表，逗号分隔
+      db00: # 第 0 号数据源（默认库）
+        driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.x 数据库驱动类
+        url: jdbc:mysql://127.0.0.1:3306/big_market?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true # 默认库 big_market 连接地址
+        username: root # 数据库用户名
+        password: 962464 # 数据库密码
+        type-class-name: com.zaxxer.hikari.HikariDataSource # 连接池实现类（HikariCP）
+        pool: # HikariCP 连接池参数配置
+          pool-name: Retail_HikariCP # 连接池名称
+          minimum-idle: 15 #最小空闲连接数量
+          idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
+          maximum-pool-size: 25 #连接池最大连接数，默认是10
+          auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
+          max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
+          connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
+          connection-test-query: SELECT 1 # 连接有效性测试 SQL
+      db01: # 第 1 号数据源（分库）
+        driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.x 数据库驱动类
+        url: jdbc:mysql://127.0.0.1:3306/big_market_01?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true # 分库 big_market_01 连接地址
+        username: root # 数据库用户名
+        password: 962464 # 数据库密码
+        type-class-name: com.zaxxer.hikari.HikariDataSource # 连接池实现类（HikariCP）
+        pool: # HikariCP 连接池参数配置
+          pool-name: Retail_HikariCP # 连接池名称
+          minimum-idle: 15 #最小空闲连接数量
+          idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
+          maximum-pool-size: 25 #连接池最大连接数，默认是10
+          auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
+          max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
+          connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
+          connection-test-query: SELECT 1 # 连接有效性测试 SQL
+      db02: # 第 2 号数据源（分库）
+        driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8.x 数据库驱动类
+        url: jdbc:mysql://127.0.0.1:3306/big_market_02?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true # 分库 big_market_02 连接地址
+        username: root # 数据库用户名
+        password: 962464 # 数据库密码
+        type-class-name: com.zaxxer.hikari.HikariDataSource # 连接池实现类（HikariCP）
+        pool: # HikariCP 连接池参数配置
+          pool-name: Retail_HikariCP # 连接池名称
+          minimum-idle: 15 #最小空闲连接数量
+          idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
+          maximum-pool-size: 25 #连接池最大连接数，默认是10
+          auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
+          max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
+          connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
+          connection-test-query: SELECT 1 # 连接有效性测试 SQL
 
 # MyBatis 配置【如需使用记得打开】
 mybatis:

@@ -61,6 +61,13 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- 随机对象生成工具，测试用；easyRandom.nextObject(Class) 可按类型随机生成对象值 -->
+        <dependency>
+            <groupId>org.jeasy</groupId>
+            <artifactId>easy-random-core</artifactId>
+            <version>4.3.0</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt</artifactId>
@@ -87,6 +94,10 @@
         <dependency>
             <groupId>com.zhaoyushi</groupId>
             <artifactId>02-big-market-trigger</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>cn.bugstack.middleware</groupId>
+            <artifactId>db-router-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>com.zhaoyushi</groupId>
