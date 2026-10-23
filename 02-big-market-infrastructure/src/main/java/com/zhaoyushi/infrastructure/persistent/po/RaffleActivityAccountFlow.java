@@ -8,7 +8,7 @@ import java.util.Date;
  * @author Fuzhengwei bugstack.cn @小傅哥
  * @description 抽奖活动账户流水表 持久化对象
  * 一个账户 → 多条流水（1:N）。每次次数变动都记一条，biz_id 唯一保证「同一笔业务不会重复记账」
- * @create 2024-03-02 13:20
+ * @create 2024-03-02 13:20 账户次数流水
  */
 @Data
 public class RaffleActivityAccountFlow {

@@ -8,7 +8,7 @@ import java.util.Date;
  * @author Fuzhengwei bugstack.cn @小傅哥
  * @description 抽奖活动单 持久化对象
  * 一个活动 → 多个订单（1:N）。记录「用户某次抽奖」的凭证
- * @create 2024-03-02 13:21
+ * @create 2024-03-02 13:21  活动下单记录
  */
 @Data
 public class RaffleActivityOrder {
