@@ -2,24 +2,33 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IRaffleActivityDao">
 
+    <!-- 结果映射：数据库列名 → RaffleActivity PO 属性 -->
     <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.RaffleActivity">
+        <!-- 自增ID -->
         <id column="id" property="id"/>
+        <!-- 活动ID -->
         <result column="activity_id" property="activityId"/>
+        <!-- 活动名称 -->
         <result column="activity_name" property="activityName"/>
+        <!-- 活动描述 -->
         <result column="activity_desc" property="activityDesc"/>
+        <!-- 开始时间 -->
         <result column="begin_date_time" property="beginDateTime"/>
+        <!-- 结束时间 -->
         <result column="end_date_time" property="endDateTime"/>
-        <result column="stock_count" property="stockCount"/>
-        <result column="stock_count_surplus" property="stockCountSurplus"/>
-        <result column="activity_count_id" property="activityCountId"/>
+        <!-- 抽奖策略ID -->
         <result column="strategy_id" property="strategyId"/>
+        <!-- 活动状态 -->
         <result column="state" property="state"/>
+        <!-- 创建时间 -->
         <result column="create_time" property="createTime"/>
+        <!-- 更新时间 -->
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!-- 按活动ID查询活动 -->
     <select id="queryRaffleActivityByActivityId" parameterType="java.lang.Long" resultMap="dataMap">
-        select activity_id, activity_name, activity_desc, begin_date_time, end_date_time, stock_count, stock_count_surplus, activity_count_id, strategy_id, state
+        select activity_id, activity_name, activity_desc, begin_date_time, end_date_time, strategy_id, state
         from raffle_activity
         where activity_id = #{activityId}
     </select>

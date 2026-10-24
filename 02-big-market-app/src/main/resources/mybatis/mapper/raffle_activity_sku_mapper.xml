@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IRaffleActivitySkuDao">
+
+    <!-- 结果映射：数据库列名 → RaffleActivitySku PO 属性 -->
+    <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.RaffleActivitySku">
+        <!-- 商品 SKU 编号 -->
+        <result column="sku" property="sku"/>
+        <!-- 活动ID -->
+        <result column="activity_id" property="activityId"/>
+        <!-- 活动个人参与次数ID -->
+        <result column="activity_count_id" property="activityCountId"/>
+        <!-- 库存总量 -->
+        <result column="stock_count" property="stockCount"/>
+        <!-- 剩余库存 -->
+        <result column="stock_count_surplus" property="stockCountSurplus"/>
+        <!-- 创建时间 -->
+        <result column="create_time" property="createTime"/>
+        <!-- 更新时间 -->
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 按 SKU 查询活动商品信息 -->
+    <select id="queryActivitySku" parameterType="java.lang.Long" resultMap="dataMap">
+        select sku, activity_id, activity_count_id, stock_count, stock_count_surplus
+        from raffle_activity_sku
+        where sku = #{sku}
+    </select>
+
+</mapper>

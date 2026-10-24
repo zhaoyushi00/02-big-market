@@ -1,4 +1,4 @@
-package com.zhaoyushi.test.domain;
+package com.zhaoyushi.test.domain.strategy;
 
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyArmory;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyDispatch;
