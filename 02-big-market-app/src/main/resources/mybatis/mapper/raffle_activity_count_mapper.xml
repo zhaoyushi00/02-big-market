@@ -2,12 +2,31 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IRaffleActivityCountDao">
 
+    <!-- 结果映射：数据库列名 → RaffleActivityCount PO 属性 -->
     <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityCount">
+        <!-- 自增ID -->
         <id column="id" property="id"/>
-        <result column="" property=""/>
+        <!-- 活动次数编号 -->
+        <result column="activity_count_id" property="activityCountId"/>
+        <!-- 总次数 -->
+        <result column="total_count" property="totalCount"/>
+        <!-- 日次数 -->
+        <result column="day_count" property="dayCount"/>
+        <!-- 月次数 -->
+        <result column="month_count" property="monthCount"/>
+        <!-- 创建时间 -->
         <result column="create_time" property="createTime"/>
+        <!-- 更新时间 -->
         <result column="update_time" property="updateTime"/>
     </resultMap>
+
+    <!-- 按次数配置编号查询次数配置 -->
+    <select id="queryRaffleActivityCountByActivityCountId"
+            resultType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityCount" resultMap="dataMap">
+        select activity_count_id, total_count, day_count, month_count
+        from big_market.raffle_activity_count
+        where activity_count_id = #{activityCountId}
+    </select>
 
 
 </mapper>

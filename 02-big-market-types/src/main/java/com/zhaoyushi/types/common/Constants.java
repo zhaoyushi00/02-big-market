@@ -21,6 +21,13 @@ public class Constants {
         public static String STRATEGY_KEY = "big_market_strategy_key_";
         /** 策略奖品列表缓存 key 前缀 */
         public static String STRATEGY_AWARD_KEY = "big_market_strategy_award_key_";
+        /** 活动信息缓存 key 前缀（完整 key 形如：big_market_activity_key_活动ID） */
+        public static String ACTIVITY_KEY = "big_market_activity_key_";
+        /** 活动 SKU 缓存 key 前缀（完整 key 形如：big_market_activity_sku_key_SKU） */
+        public static String ACTIVITY_SKU_KEY = "big_market_activity_sku_key_";
+        /** 活动次数配置缓存 key 前缀（完整 key 形如：big_market_activity_count_key_次数配置ID） */
+        public static String ACTIVITY_COUNT_KEY = "big_market_activity_count_key_";
+        /** 策略奖品列表缓存 key 前缀（列表形式） */
         public static String STRATEGY_AWARD_LIST_KEY = "big_market_strategy_award_list_key_";
         /** 策略概率查找表缓存 key 前缀 */
         public static String STRATEGY_RATE_TABLE_KEY = "big_market_strategy_rate_table_key_";
@@ -30,6 +37,7 @@ public class Constants {
         public static String RULE_TREE_VO_KEY = "rule_tree_vo_key_";
         /** 奖品库存缓存 key 前缀，用于存储并扣减奖品库存数量（完整 key 形如：strategy_award_count_key_策略ID_奖品ID） */
         public static String STRATEGY_AWARD_COUNT_KEY = "strategy_award_count_key_";
+        /** 奖品库存查询缓存 key 前缀（用于标记库存查询结果） */
         public static String STRATEGY_AWARD_COUNT_QUERY_KEY = "strategy_award_count_query_key";
     }
 }
