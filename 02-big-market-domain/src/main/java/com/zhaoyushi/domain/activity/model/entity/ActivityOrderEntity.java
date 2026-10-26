@@ -20,7 +20,8 @@ import java.util.Date;
  * <p>关键点：
  * 1. orderId 唯一，是本次下单的凭证号；
  * 2. totalCount/dayCount/monthCount 是“这一笔订单消耗的次数快照”，不是累计参与次数；
- * 3. state 用 OrderStateVO 表达，当前仅 completed（完成）一种状态。
+ * 3. state 用 OrderStateVO 表达，当前仅 completed（完成）一种状态；
+ * 4. outBusinessNo 是外部透传的业务防重单号，作为唯一索引用于保证下单幂等。
  *
  * @author zhaoy
  * @date 2026/10/24
@@ -36,6 +37,11 @@ public class ActivityOrderEntity {
      * 用户ID：下单用户
      */
     private String userId;
+
+    /**
+     * 商品SKU：标识“领了哪个商品”，语义为 activity + activity count 的组合
+     */
+    private Long sku;
 
     /**
      * 活动ID：参与的活动
@@ -81,5 +87,10 @@ public class ActivityOrderEntity {
      * 订单状态：completed(完成)
      */
     private OrderStateVO state;
+
+    /**
+     * 业务防重ID - 外部透传，确保幂等
+     */
+    private String outBusinessNo;
 
 }

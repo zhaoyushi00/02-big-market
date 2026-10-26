@@ -24,6 +24,11 @@ public class RaffleActivityOrder {
     private String userId;
 
     /**
+     * 商品SKU：标识“领了哪个商品”，语义为 activity + activity count 的组合
+     */
+    private Long sku;
+
+    /**
      * 活动ID
      */
     private Long activityId;
@@ -54,6 +59,21 @@ public class RaffleActivityOrder {
     private String state;
 
     /**
+     * 总次数
+     */
+    private Integer totalCount;
+
+    /**
+     * 日次数
+     */
+    private Integer dayCount;
+
+    /**
+     * 月次数
+     */
+    private Integer monthCount;
+
+    /**
      * 创建时间
      */
     private Date createTime;
@@ -62,5 +82,11 @@ public class RaffleActivityOrder {
      * 更新时间
      */
     private Date updateTime;
+
+    /**
+     * 业务防重ID - 外部透传，确保幂等
+     */
+    private String outBusinessNo;
+
 
 }

@@ -1,8 +1,6 @@
 package com.zhaoyushi.test.domain.activity;
 
-import com.alibaba.fastjson.JSON;
-import com.zhaoyushi.domain.activity.model.entity.ActivityOrderEntity;
-import com.zhaoyushi.domain.activity.model.entity.ActivityShopCartEntity;
+import com.zhaoyushi.domain.activity.model.entity.SkuRechargeEntity;
 import com.zhaoyushi.domain.activity.service.IRaffleOrder;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -24,13 +22,12 @@ public class RaffleOrderTest {
     private IRaffleOrder raffleOrder;
 
     @Test
-    public void test_createRaffleActivityOrder() {
-        ActivityShopCartEntity activityShopCartEntity = new ActivityShopCartEntity();
-
-        activityShopCartEntity.setUserId("zhaoy");
-        activityShopCartEntity.setSku(9011L);
-
-        ActivityOrderEntity raffleActivityOrder = raffleOrder.createRaffleActivityOrder(activityShopCartEntity);
-        log.info("测试结果：{}", JSON.toJSONString(raffleActivityOrder));
+    public void test_(){
+        SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
+        skuRechargeEntity.setUserId("zhaoy");
+        skuRechargeEntity.setSku(9011L);
+        skuRechargeEntity.setOutBusinessNo("700091009112");
+        String order = raffleOrder.createSkuRechargeOrder(skuRechargeEntity);
+        log.info("测试结果:{}", order);
     }
 }

@@ -1,5 +1,6 @@
 package com.zhaoyushi.domain.activity.repository;
 
+import com.zhaoyushi.domain.activity.model.aggregate.CreateOrderAggregate;
 import com.zhaoyushi.domain.activity.model.entity.ActivityCountEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivityEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivitySkuEntity;
@@ -42,4 +43,13 @@ public interface IActivityRepository {
      */
     ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId);
 
+    /**
+     * 保存订单聚合（订单 + 账户次数变更）
+     *
+     * <p>一次性持久化“活动订单”与“活动账户次数”，二者在同一事务中提交，保证一致性。
+     * 内部会以 userId 为分片键路由到对应分库分表，并处理唯一索引冲突（幂等防重）。
+     *
+     * @param createOrderAggregate 下单聚合对象，含订单实体与账户维度次数信息
+     */
+    void doSaveOrder(CreateOrderAggregate createOrderAggregate);
 }
