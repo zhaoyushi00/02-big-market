@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Redis 服务 - Redisson
@@ -195,6 +196,20 @@ public class RedissonService implements IRedisService {
     public Boolean setNx(String lockKey) {
         // 仅当 key 不存在时写入占位值 "lock"，写入成功表示抢占成功
         return redissonClient.getBucket(lockKey).trySet("lock");
+    }
+
+    /**
+     * 尝试原子设置 key（SET NX）并指定过期时间
+     *
+     * @param lockKey     要写入的 key
+     * @param expireMillis 过期时长数值
+     * @param timeUnit    过期时长单位
+     * @return 写入成功返回 true；key 已存在返回 false
+     */
+    @Override
+    public Boolean setNx(String lockKey, long expireMillis, TimeUnit timeUnit) {
+        // 使用 Redisson Bucket 的 trySet 在 key 不存在时写入占位值并设置过期时间（带 TTL 的 SET NX）
+        return redissonClient.getBucket(lockKey).trySet("lock", expireMillis, timeUnit);
     }
 
 

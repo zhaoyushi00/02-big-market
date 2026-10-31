@@ -92,16 +92,34 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
         return treeEngine.process(userId, strategyId, awardId);
     }
 
+    /**
+     * 获取延迟队列中的奖品库存扣减记录（实现 IRaffleStock 端口）
+     *
+     * @return 奖品库存 Key 信息（含 strategyId、awardId），队列为空时返回 null
+     * @throws InterruptedException 取队列被中断异常
+     */
     @Override
     public StrategyAwardStockKeyVO takeQueueValue() throws InterruptedException {
         return repository.takeQueueValue();
     }
 
+    /**
+     * 更新数据库奖品库存（实现 IRaffleStock 端口，每次扣减 1 件）
+     *
+     * @param strategyId 策略 ID
+     * @param awardId    奖品 ID
+     */
     @Override
     public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
         repository.updateStrategyAwardStock(strategyId, awardId);
     }
 
+    /**
+     * 查询策略下奖品列表（实现 IRaffleAward 端口）
+     *
+     * @param strategyId 策略 ID
+     * @return 奖品实体列表
+     */
     @Override
     public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
         return repository.queryStrategyAwardList(strategyId);

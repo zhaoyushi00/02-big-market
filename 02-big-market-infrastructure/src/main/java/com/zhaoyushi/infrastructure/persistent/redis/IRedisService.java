@@ -2,6 +2,8 @@ package com.zhaoyushi.infrastructure.persistent.redis;
 
 import org.redisson.api.*;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Redis 服务
  *
@@ -272,4 +274,15 @@ public interface IRedisService {
      * @return 写入成功返回 true；key 已存在返回 false
      */
     Boolean setNx(String lockKey);
+
+    /**
+     * 尝试原子设置 key（SET NX）并指定过期时间
+     * <p>仅当 key 不存在时写入，并设置过期时长，用于实现带自动释放的库存锁（防超卖兜底）。
+     *
+     * @param lockKey     要写入的 key
+     * @param expireMillis 过期时长数值
+     * @param timeUnit    过期时长单位
+     * @return 写入成功返回 true；key 已存在返回 false
+     */
+    Boolean setNx(String lockKey, long expireMillis, TimeUnit timeUnit);
 }

@@ -53,6 +53,16 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring AMQP 起步依赖版本管理：统一 RabbitMQ 相关依赖版本（子模块无需写版本号） -->
+            <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp -->
+            <dependency>
+                <!-- 依赖组坐标：Spring Boot 官方 -->
+                <groupId>org.springframework.boot</groupId>
+                <!-- 依赖构件：spring-boot-starter-amqp -->
+                <artifactId>spring-boot-starter-amqp</artifactId>
+                <!-- 锁定版本号 3.2.0 -->
+                <version>3.2.0</version>
+            </dependency>
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>
                 <artifactId>mybatis-spring-boot-starter</artifactId>

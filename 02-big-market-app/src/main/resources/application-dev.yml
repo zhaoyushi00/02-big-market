@@ -14,6 +14,19 @@ app:
     # 跨域，开发阶段可以设置为 * 不限制
     cross-origin: '*'
 
+# Spring 配置；rabbitmq（活动 SKU 库存一致性用的消息队列）
+spring:
+  rabbitmq:
+    addresses: 127.0.0.1 # RabbitMQ 服务地址（本地）
+    port: 5672 # RabbitMQ 服务端口（AMQP 默认端口）
+    username: admin # RabbitMQ 登录用户名
+    password: admin # RabbitMQ 登录密码
+    listener:
+      simple:
+        prefetch: 1 # 每次投递 n 个消息，消费完再投递 n 个（保证消费端串行、避免并发竞争）
+    topic:
+      activity_sku_stock_zero: activity_sku_stock_zero # 活动 SKU 库存耗尽消息的主题名
+
 # 线程池配置
 thread:
   pool:

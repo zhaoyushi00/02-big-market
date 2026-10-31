@@ -10,6 +10,15 @@
     <artifactId>02-big-market-infrastructure</artifactId>
 
     <dependencies>
+
+        <!-- Spring AMQP 起步依赖：提供 RabbitTemplate 消息发送能力（EventPublisher 使用） -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp -->
+        <dependency>
+            <!-- 依赖组坐标：Spring Boot 官方 -->
+            <groupId>org.springframework.boot</groupId>
+            <!-- 依赖构件：spring-boot-starter-amqp -->
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>

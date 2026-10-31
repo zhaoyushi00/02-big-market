@@ -69,8 +69,10 @@ public abstract class AbstractRaffleActivity extends RaffleActivitySupport imple
         ActivityCountEntity activityCountEntity = queryRaffleActivityCountByActivityCountId(activitySkuEntity.getActivityCountId());
 
         // 3、活动动作规则校验 todo 后续处理规则过滤流程，暂时也不处理责任链结果
+        // 打开活动动作责任链（当前为 基础校验 -> SKU 库存校验 两个节点）
         IActionChain actionChain = defaultActivityChainFactory.openActionChain();
-        boolean success = actionChain.action(activitySkuEntity, activityEntity, activityCountEntity);
+        // 执行责任链：依次做活动状态/日期/库存校验，并扣减库存（校验失败会抛出 AppException 终止下单）
+        actionChain.action(activitySkuEntity, activityEntity, activityCountEntity);
 
         // 4、构建订单聚合对象
         CreateOrderAggregate createOrderAggregate = buildOrderAggregate(skuRechargeEntity, activitySkuEntity, activityEntity, activityCountEntity);

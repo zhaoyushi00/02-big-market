@@ -12,6 +12,15 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- Spring AMQP 起步依赖：提供 RabbitMQ 消息发送/监听能力（活动库存一致性用） -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp -->
+        <dependency>
+            <!-- 依赖组坐标：Spring Boot 官方 -->
+            <groupId>org.springframework.boot</groupId>
+            <!-- 依赖构件：spring-boot-starter-amqp -->
+            <artifactId>spring-boot-starter-amqp</artifactId>
+            <!-- 版本由父工程 dependencyManagement 统一管理，此处不写版本号 -->
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

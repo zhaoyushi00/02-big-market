@@ -19,6 +19,10 @@ public class UpdateAwardStockJob {
     @Resource
     private IRaffleStock raffleStock;
 
+    /**
+     * 定时任务执行方法
+     * <p>每 5 秒执行一次：从延迟队列取一条奖品库存扣减记录，若不为空则更新数据库库存。
+     */
     @Scheduled(cron = "0/5 * * * * ?")
     public void exec() {
         try {

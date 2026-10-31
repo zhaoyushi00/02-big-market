@@ -14,6 +14,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- Spring AMQP 起步依赖：提供 @RabbitListener 消息监听能力（库存耗尽消费者） -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp -->
+        <dependency>
+            <!-- 依赖组坐标：Spring Boot 官方 -->
+            <groupId>org.springframework.boot</groupId>
+            <!-- 依赖构件：spring-boot-starter-amqp -->
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>

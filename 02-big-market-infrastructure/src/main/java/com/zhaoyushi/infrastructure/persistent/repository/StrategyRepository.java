@@ -409,6 +409,13 @@ public class StrategyRepository implements IStrategyRepository {
         delayedQueue.offer(strategyAwardStockKeyVO, 3, TimeUnit.SECONDS);
     }
 
+    /**
+     * 非阻塞取出延迟队列队首元素
+     *
+     * <p>从目标阻塞队列非阻塞取出队首元素，队列为空时返回 null。
+     *
+     * @return 奖品库存扣减记录，队列为空时返回 null
+     */
     @Override
     public StrategyAwardStockKeyVO takeQueueValue() {
         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_COUNT_QUERY_KEY;
@@ -416,6 +423,14 @@ public class StrategyRepository implements IStrategyRepository {
         return destinationQueue.poll();
     }
 
+    /**
+     * 更新数据库奖品库存（每次扣减 1 件）
+     *
+     * <p>委托 DAO 将数据库中的奖品剩余库存减 1。
+     *
+     * @param strategyId 策略 ID
+     * @param awardId    奖品 ID
+     */
     @Override
     public void updateStrategyAwardStock(Long strategyId, Integer awardId) {
         StrategyAward strategyAward = new StrategyAward();
@@ -424,6 +439,15 @@ public class StrategyRepository implements IStrategyRepository {
         strategyAwardDao.updateStrategyAwardStock(strategyAward);
     }
 
+    /**
+     * 查询策略奖品实体（带缓存）
+     *
+     * <p>优先从 Redis 缓存读取，未命中则查库并回填缓存。
+     *
+     * @param strategyId 策略 ID
+     * @param awardId    奖品 ID
+     * @return 策略奖品实体
+     */
     @Override
     public StrategyAwardEntity queryStrategyAwardEntity(Long strategyId, Integer awardId) {
         // 优先从缓存获取

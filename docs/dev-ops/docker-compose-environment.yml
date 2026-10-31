@@ -82,6 +82,23 @@ services:
       redis:
         condition: service_healthy
 
+  # rabbitmq：消息队列服务，用于活动 SKU 库存耗尽时的异步通知
+  # 账密 admin/admin
+  # 启用管理插件命令：rabbitmq-plugins enable rabbitmq_management
+  rabbitmq:
+    image: rabbitmq:3.12.9 # 使用 rabbitmq 3.12.9 官方镜像
+    container_name: rabbitmq # 容器名称
+    restart: always # 容器退出后总是自动重启
+    ports:
+      - "5672:5672" # 端口映射：AMQP 消息端口（应用连接用）
+      - "15672:15672" # 端口映射：管理后台 Web 端口
+    environment:
+      RABBITMQ_DEFAULT_USER: admin # 默认管理员用户名
+      RABBITMQ_DEFAULT_PASS: admin # 默认管理员密码
+    command: rabbitmq-server # 启动命令：rabbitmq 服务
+    volumes:
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins # 挂载启用插件配置（启用管理插件）
+
 networks:
   my-network:
     driver: bridge

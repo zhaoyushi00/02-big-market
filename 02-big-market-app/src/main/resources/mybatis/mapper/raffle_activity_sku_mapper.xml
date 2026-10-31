@@ -19,6 +19,24 @@
         <!-- 更新时间 -->
         <result column="update_time" property="updateTime"/>
     </resultMap>
+    <!-- 清空活动 SKU 库存：将剩余库存逐件扣减 1（id 对应 DAO 方法 clearActivitySkuStock） -->
+    <update id="clearActivitySkuStock" parameterType="java.lang.Long">
+        <!-- 更新目标表：活动 SKU 库存表 -->
+        update raffle_activity_sku
+        <!-- 剩余库存直接置 0，并刷新更新时间 -->
+        set stock_count_surplus = 0, update_time = now()
+        <!-- 条件：匹配 sku -->
+        where sku = #{sku}
+    </update>
+    <!-- 更新活动 SKU 库存：将剩余库存直接置 0（id 对应 DAO 方法 updateActivitySkuStock） -->
+    <update id="updateActivitySkuStock" parameterType="java.lang.Long">
+        <!-- 更新目标表：活动 SKU 库存表 -->
+        update raffle_activity_sku
+        <!-- 剩余库存减 1，并刷新更新时间 -->
+        set stock_count_surplus = stock_count_surplus - 1, update_time = now()
+        <!-- 条件：匹配 sku 且剩余库存大于 0（避免扣成负数） -->
+        where sku = #{sku} and stock_count_surplus > 0
+    </update>
 
     <!-- 按 SKU 查询活动商品信息 -->
     <select id="queryActivitySku" parameterType="java.lang.Long" resultMap="dataMap">

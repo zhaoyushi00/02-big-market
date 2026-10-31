@@ -2,6 +2,7 @@ package com.zhaoyushi.domain.activity.service;
 
 import com.zhaoyushi.domain.activity.model.aggregate.CreateOrderAggregate;
 import com.zhaoyushi.domain.activity.model.entity.*;
+import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import com.zhaoyushi.domain.activity.model.valobj.OrderStateVO;
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
 import com.zhaoyushi.domain.activity.service.rule.factory.DefaultActivityChainFactory;
@@ -22,7 +23,8 @@ import java.util.Date;
  * @description 抽奖活动服务实现
  */
 @Service
-public class RaffleActivityService extends AbstractRaffleActivity{
+// 继承抽象活动服务模板，同时实现 ISkuStock 库存处理端口（供定时任务/MQ 监听器调用）
+public class RaffleActivityService extends AbstractRaffleActivity implements ISkuStock{
     /**
      * 构造器注入活动仓储与责任链工厂
      *
@@ -84,5 +86,48 @@ public class RaffleActivityService extends AbstractRaffleActivity{
     @Override
     protected void doSaveOrder(CreateOrderAggregate createOrderAggregate) {
         activityRepository.doSaveOrder(createOrderAggregate);
+    }
+
+    /**
+     * 获取延迟队列中的库存扣减记录（实现 ISkuStock 端口）
+     *
+     * @return 库存扣减记录，队列为空时返回 null
+     * @throws InterruptedException 取队列被中断异常
+     */
+    @Override
+    public ActivitySkuStockKeyVO takeQueueValue() throws InterruptedException {
+        // 委托仓储从延迟队列取出一条库存扣减记录
+        return activityRepository.takeQueueValue();
+    }
+
+    /**
+     * 清空延迟队列（实现 ISkuStock 端口）
+     */
+    @Override
+    public void clearQueueValue() {
+        // 委托仓储清空延迟队列
+        activityRepository.clearQueueValue();
+    }
+
+    /**
+     * 更新数据库库存（实现 ISkuStock 端口，每次扣减 1 件）
+     *
+     * @param sku 商品 SKU 编号
+     */
+    @Override
+    public void updateActivitySkuStock(Long sku) {
+        // 委托仓储更新数据库库存
+        activityRepository.updateActivitySkuStock(sku);
+    }
+
+    /**
+     * 清空数据库库存（实现 ISkuStock 端口，库存耗尽后置 0）
+     *
+     * @param sku 商品 SKU 编号
+     */
+    @Override
+    public void clearActivitySkuStock(Long sku) {
+        // 委托仓储清空数据库库存
+        activityRepository.clearActivitySkuStock(sku);
     }
 }

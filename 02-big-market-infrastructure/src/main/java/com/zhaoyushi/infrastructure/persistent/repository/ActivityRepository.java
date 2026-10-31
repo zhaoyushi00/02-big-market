@@ -6,8 +6,13 @@ import com.zhaoyushi.domain.activity.model.entity.ActivityCountEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivityEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivityOrderEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivitySkuEntity;
+import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import com.zhaoyushi.domain.activity.model.valobj.ActivityStateVO;
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
+// 引入活动 SKU 库存清空消息事件，用于库存耗尽时构建并发布 MQ 消息
+import com.zhaoyushi.domain.event.ActivitySkuStockZeroMessageEvent;
+// 引入事件发布器，用于发送 MQ 消息
+import com.zhaoyushi.infrastructure.event.EventPublisher;
 import com.zhaoyushi.infrastructure.persistent.dao.*;
 import com.zhaoyushi.infrastructure.persistent.po.*;
 import com.zhaoyushi.infrastructure.persistent.redis.IRedisService;
@@ -16,9 +21,18 @@ import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+// 引入 Redisson 阻塞队列接口，作为延迟队列的目标队列
+import org.redisson.api.RBlockingQueue;
+// 引入 Redisson 延迟队列接口，用于实现延迟投递（延迟 3 秒）
+import org.redisson.api.RDelayedQueue;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
+
+// 引入 java.util.Date，作为活动结束时间参数类型
+import java.util.Date;
+// 引入 java.util.concurrent.TimeUnit，用于时间单位换算（延迟队列、锁过期时间）
+import java.util.concurrent.TimeUnit;
 
 /**
  * 活动仓储服务实现（基础设施层）
@@ -65,7 +79,21 @@ public class ActivityRepository implements IActivityRepository {
     /** 分库分表路由策略：事务结束后清理路由上下文 */
     @Resource
     private IDBRouterStrategy dbRouter;
+    /** 事件发布器：库存耗尽时发送 MQ 消息 */
+    @Resource
+    private EventPublisher eventPublisher;
+    /** 活动 SKU 库存清空消息事件：提供 topic 与消息体构建能力 */
+    @Resource
+    private ActivitySkuStockZeroMessageEvent activitySkuStockZeroMessageEvent;
 
+    /**
+     * 根据 SKU 查询活动 SKU 实体信息
+     *
+     * <p>直接通过 DAO 从数据库查询 SKU 持久化对象，并将其转换为领域实体返回。
+     *
+     * @param sku SKU 编号
+     * @return 活动 SKU 领域实体
+     */
     @Override
     public ActivitySkuEntity queryActivitySku(Long sku) {
         // 通过 DAO 从数据库查询 SKU 持久化对象
@@ -80,6 +108,14 @@ public class ActivityRepository implements IActivityRepository {
                 .build();
     }
 
+    /**
+     * 根据活动 ID 查询活动实体信息
+     *
+     * <p>采用“缓存优先”策略：先读 Redis，命中则直接返回；未命中时查数据库并回填缓存。
+     *
+     * @param activityId 活动 ID
+     * @return 活动领域实体
+     */
     @Override
     public ActivityEntity queryRaffleActivityByActivityId(Long activityId) {
         // 组装缓存 key：活动缓存前缀 + 活动ID
@@ -105,6 +141,14 @@ public class ActivityRepository implements IActivityRepository {
         return activityEntity;
     }
 
+    /**
+     * 根据活动次数配置 ID 查询次数配置实体信息
+     *
+     * <p>采用“缓存优先”策略：先读 Redis，命中则直接返回；未命中时查数据库并回填缓存。
+     *
+     * @param activityCountId 活动次数配置 ID
+     * @return 活动次数配置领域实体
+     */
     @Override
     public ActivityCountEntity queryRaffleActivityCountByActivityCountId(Long activityCountId) {
         // 组装缓存 key：次数配置缓存前缀 + 次数配置编号
@@ -195,5 +239,145 @@ public class ActivityRepository implements IActivityRepository {
             dbRouter.clear();
         }
 
+    }
+
+    /**
+     * 缓存活动 SKU 库存数量
+     *
+     * <p>缓存已存在时跳过，避免重复预热覆盖已扣减的库存；否则写入 Redis 原子计数器。
+     *
+     * @param cacheKey   库存缓存 key
+     * @param stockCount 库存数量
+     */
+    @Override
+    public void cacheActivitySkuStockCount(String cacheKey, Integer stockCount) {
+        // 缓存已存在则跳过，避免重复预热覆盖已扣减的库存
+        if (redisService.isExists(cacheKey)) return;
+        // 将库存数量写入 Redis 原子计数器（AtomicLong）
+        redisService.setAtomicLong(cacheKey, stockCount);
+    }
+
+    /**
+     * 扣减活动 SKU 库存
+     *
+     * <p>对 Redis 原子计数器减 1：库存耗尽时发送 MQ 消息通知数据库清空；剩余为负时兜底纠正为 0；
+     * 同时为「这一份库存」加锁，防止后续手动恢复库存导致超卖。
+     *
+     * @param sku          SKU 编号
+     * @param cacheKey     库存缓存 key
+     * @param endDateTime  活动结束时间（用于计算锁过期时长）
+     * @return 扣减是否成功（库存耗尽或加锁失败返回 false）
+     */
+    @Override
+    public boolean subtractionActivitySkuStock(Long sku, String cacheKey, Date endDateTime) {
+
+        // 对 Redis 原子计数器执行 decr（原子减 1），返回扣减后的剩余库存
+        long surplus = redisService.decr(cacheKey);
+        // 剩余库存为 0：说明刚好消耗完
+        if (surplus == 0) {
+            // 库存消耗完，发送MQ消息，更新数据库库存（通知消费者将数据库库存直接置 0）
+            eventPublisher.publish(activitySkuStockZeroMessageEvent.topic(), activitySkuStockZeroMessageEvent.buildEventMessage(sku));
+            // 返回 false 表示扣减失败（本次库存已耗尽，不应再继续下单）
+            return false;
+        } else if (surplus < 0){
+            // 库存小于0，并发多操作，恢复为0（兜底：把负库存纠正回 0）
+            redisService.setAtomicLong(cacheKey, 0);
+            // 返回 false 表示扣减失败
+            return false;
+        }
+
+        // 1、按照cacheKey decr后的值，与key组成库存锁的Key进行使用
+        // 2、加锁为了兜底，如果后续有恢复库存，手动处理，也不会超卖，因为所有可用的库存key都被枷锁了
+        // 3、设置加锁时间为活动到期 + 延时 1 天
+        // 组装库存锁 key：缓存 key + 下划线 + 扣减后的剩余值（用于标记「这一份库存」已被占用）
+        String lockKey = cacheKey + Constants.UNDERLINE + surplus;
+        // 计算锁过期时长：活动结束时间 - 当前时间 + 1 天（保证锁在活动期间及之后一天内有效）
+        long expireMillis = endDateTime.getTime() - System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1);
+        // 执行 SET NX 加锁（带过期时间），返回是否加锁成功
+        Boolean lock = redisService.setNx(lockKey, expireMillis, TimeUnit.MILLISECONDS);
+        // 加锁失败（该库存分片已被占用）则记录日志
+        if (!lock){
+            log.info("活动sku库存加锁失败{}", lockKey);
+        }
+
+        // 返回加锁结果作为扣减是否成功
+        return lock;
+    }
+
+    /**
+     * 将活动 SKU 库存扣减记录加入延迟队列
+     *
+     * <p>将库存扣减记录放入 Redisson 延迟队列，延迟 3 秒后投递到阻塞队列，供定时任务消费更新数据库库存。
+     *
+     * @param activitySkuStockKeyVO 库存扣减记录（含 SKU 编号）
+     */
+    @Override
+    public void activitySkuStockConsumeSendQueue(ActivitySkuStockKeyVO activitySkuStockKeyVO) {
+        // 组装延迟队列 key（活动 SKU 库存扣减延迟队列）
+        String cacheKey = Constants.RedisKey.ACTIVITY_SKU_COUNT_QUERY_KEY;
+        // 获取目标阻塞队列（延迟队列到期后元素会投递到该队列）
+        RBlockingQueue<ActivitySkuStockKeyVO> blockingQueue = redisService.getBlockingQueue(cacheKey);
+        // 基于阻塞队列创建延迟队列
+        RDelayedQueue<ActivitySkuStockKeyVO> delayedQueue = redisService.getDelayedQueue(blockingQueue);
+        // 将库存扣减记录加入延迟队列，延迟 3 秒后投递（供定时任务消费）
+        delayedQueue.offer(activitySkuStockKeyVO, 3, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 非阻塞取出延迟队列队首元素
+     *
+     * <p>从目标阻塞队列非阻塞取出队首元素，队列为空时返回 null。
+     *
+     * @return 库存扣减记录，队列为空时返回 null
+     */
+    @Override
+    public ActivitySkuStockKeyVO takeQueueValue() {
+        // 组装延迟队列 key
+        String cacheKey = Constants.RedisKey.ACTIVITY_SKU_COUNT_QUERY_KEY;
+        // 获取目标阻塞队列
+        RBlockingQueue<ActivitySkuStockKeyVO> destinationQueue = redisService.getBlockingQueue(cacheKey);
+        // 非阻塞取出队首元素，队列为空时返回 null
+        return destinationQueue.poll();
+    }
+
+    /**
+     * 清空库存扣减延迟队列
+     *
+     * <p>库存耗尽后无需再延迟更新数据库，直接清空目标阻塞队列。
+     */
+    @Override
+    public void clearQueueValue() {
+        // 组装延迟队列 key
+        String cacheKey = Constants.RedisKey.ACTIVITY_SKU_COUNT_QUERY_KEY;
+        // 获取目标阻塞队列
+        RBlockingQueue<ActivitySkuStockKeyVO> destinationQueue = redisService.getBlockingQueue(cacheKey);
+        // 清空队列（库存耗尽后无需再延迟更新数据库）
+        destinationQueue.clear();
+    }
+
+    /**
+     * 更新数据库库存（剩余库存减 1）
+     *
+     * <p>委托 DAO 将数据库中的活动 SKU 剩余库存减 1。
+     *
+     * @param sku SKU 编号
+     */
+    @Override
+    public void updateActivitySkuStock(Long sku) {
+        // 委托 DAO 更新数据库库存（剩余库存减 1）
+        raffleActivitySkuDao.updateActivitySkuStock(sku);
+    }
+
+    /**
+     * 清空数据库库存（剩余库存置 0）
+     *
+     * <p>委托 DAO 将数据库中的活动 SKU 剩余库存置为 0。
+     *
+     * @param sku SKU 编号
+     */
+    @Override
+    public void clearActivitySkuStock(Long sku) {
+        // 委托 DAO 清空数据库库存（剩余库存置 0）
+        raffleActivitySkuDao.clearActivitySkuStock(sku);
     }
 }

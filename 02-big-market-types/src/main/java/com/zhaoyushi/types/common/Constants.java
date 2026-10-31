@@ -39,5 +39,9 @@ public class Constants {
         public static String STRATEGY_AWARD_COUNT_KEY = "strategy_award_count_key_";
         /** 奖品库存查询缓存 key 前缀（用于标记库存查询结果） */
         public static String STRATEGY_AWARD_COUNT_QUERY_KEY = "strategy_award_count_query_key";
+        /** 活动 SKU 库存缓存 key 前缀（完整 key 形如：activity_sku_stock_count_key_SKU，Redis 原子计数器） */
+        public static String ACTIVITY_SKU_STOCK_COUNT_KEY = "activity_sku_stock_count_key_";
+        /** 活动 SKU 库存扣减延迟队列 key（Redisson 延迟队列，用于异步趋势更新数据库库存） */
+        public static String ACTIVITY_SKU_COUNT_QUERY_KEY = "activity_sku_count_query_key";
     }
 }

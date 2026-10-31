@@ -24,4 +24,19 @@ public interface IRaffleActivitySkuDao {
      */
     RaffleActivitySku queryActivitySku(Long sku);
 
+    /**
+     * 更新活动 SKU 库存（每次扣减 1 件，异步趋势更新）
+     * <p>对应 SQL：stock_count_surplus = stock_count_surplus - 1（仅当剩余库存 > 0 时生效）。
+     *
+     * @param sku 商品 SKU 编号
+     */
+    void updateActivitySkuStock(Long sku);
+
+    /**
+     * 清空活动 SKU 库存（库存耗尽后直接将剩余库存置 0）
+     * <p>对应 SQL：stock_count_surplus = 0。
+     *
+     * @param sku 商品 SKU 编号
+     */
+    void clearActivitySkuStock(Long sku);
 }

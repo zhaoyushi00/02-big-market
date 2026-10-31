@@ -10,6 +10,14 @@
     <artifactId>02-big-market-domain</artifactId>
 
     <dependencies>
+        <!-- Spring AMQP 起步依赖：提供 RabbitMQ 相关注解与模板（事件消息基类、MQ 事件） -->
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-amqp -->
+        <dependency>
+            <!-- 依赖组坐标：Spring Boot 官方 -->
+            <groupId>org.springframework.boot</groupId>
+            <!-- 依赖构件：spring-boot-starter-amqp -->
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
