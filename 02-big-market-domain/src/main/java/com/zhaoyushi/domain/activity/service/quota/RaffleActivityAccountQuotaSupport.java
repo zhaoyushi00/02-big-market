@@ -1,23 +1,23 @@
-package com.zhaoyushi.domain.activity.service;
+package com.zhaoyushi.domain.activity.service.quota;
 
 import com.zhaoyushi.domain.activity.model.entity.ActivityCountEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivityEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivitySkuEntity;
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
-import com.zhaoyushi.domain.activity.service.rule.factory.DefaultActivityChainFactory;
+import com.zhaoyushi.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 
 /**
  * 抽奖活动的支撑类
  *
- * <p>作为 {@link AbstractRaffleActivity} 的父类，收敛下单流程所需的公共依赖与查询方法：
+ * <p>作为 {@link AbstractRaffleActivityAccountQuota} 的父类，收敛下单流程所需的公共依赖与查询方法：
  * 1. 持有活动仓储 {@link IActivityRepository} 与责任链工厂 {@link DefaultActivityChainFactory}；
- * 2. 提供 SKU/活动/次数配置三个查询方法，供模板方法 {@link AbstractRaffleActivity#createSkuRechargeOrder} 复用。
+ * 2. 提供 SKU/活动/次数配置三个查询方法，供模板方法 {@link AbstractRaffleActivityAccountQuota#createSkuRechargeOrder} 复用。
  *
  * @author zhaoy
  * @date 2026/10/25
  * @description 抽奖活动的支撑类
  */
-public class RaffleActivitySupport {
+public class RaffleActivityAccountQuotaSupport {
 
     /** 活动动作责任链工厂：用于获取下单前的规则校验责任链（基础信息校验 + SKU 库存校验） */
     protected DefaultActivityChainFactory defaultActivityChainFactory;
@@ -31,7 +31,7 @@ public class RaffleActivitySupport {
      * @param activityRepository          活动仓储实现
      * @param defaultActivityChainFactory 活动动作责任链工厂
      */
-    public RaffleActivitySupport(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
+    public RaffleActivityAccountQuotaSupport(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
         this.activityRepository = activityRepository;
         this.defaultActivityChainFactory = defaultActivityChainFactory;
     }

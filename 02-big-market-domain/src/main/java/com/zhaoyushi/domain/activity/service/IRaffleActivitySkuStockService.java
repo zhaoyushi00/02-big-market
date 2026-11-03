@@ -3,11 +3,12 @@ package com.zhaoyushi.domain.activity.service;
 
 // 引入活动 SKU 库存 Key 值对象，作为队列元素类型与返回值类型
 import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
+import com.zhaoyushi.domain.activity.service.quota.RaffleActivityAccountQuotaService;
 
 /**
  * 活动 SKU 库存处理接口（领域层端口）
  *
- * <p>定义活动 SKU 库存一致性相关的能力契约，由领域服务 {@link RaffleActivityService} 实现，
+ * <p>定义活动 SKU 库存一致性相关的能力契约，由领域服务 {@link RaffleActivityAccountQuotaService} 实现，
  * 供触发器层（定时任务、MQ 监听器）调用。主要提供：
  * 1. 从延迟队列取库存扣减记录（异步落库用）；
  * 2. 清空队列；
@@ -17,7 +18,7 @@ import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
  * @date 2026/10/28
  * @description 活动sku库存处理接口
  */
-public interface ISkuStock {
+public interface IRaffleActivitySkuStockService {
 
     /**
      * 获取活动 sku 库存消耗队列（阻塞队列）

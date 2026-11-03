@@ -1,11 +1,12 @@
-package com.zhaoyushi.domain.activity.service;
+package com.zhaoyushi.domain.activity.service.quota;
 
-import com.zhaoyushi.domain.activity.model.aggregate.CreateOrderAggregate;
+import com.zhaoyushi.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import com.zhaoyushi.domain.activity.model.entity.*;
 import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import com.zhaoyushi.domain.activity.model.valobj.OrderStateVO;
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
-import com.zhaoyushi.domain.activity.service.rule.factory.DefaultActivityChainFactory;
+import com.zhaoyushi.domain.activity.service.IRaffleActivitySkuStockService;
+import com.zhaoyushi.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ import java.util.Date;
 /**
  * 抽奖活动服务实现（领域服务）
  *
- * <p>继承 {@link AbstractRaffleActivity} 模板，实现两个钩子方法：
+ * <p>继承 {@link AbstractRaffleActivityAccountQuota} 模板，实现两个钩子方法：
  * 1. buildOrderAggregate：组装订单实体 + 账户次数信息，构建下单聚合对象；
  * 2. doSaveOrder：委托仓储持久化聚合（订单 + 账户次数）。
  *
@@ -24,14 +25,14 @@ import java.util.Date;
  */
 @Service
 // 继承抽象活动服务模板，同时实现 ISkuStock 库存处理端口（供定时任务/MQ 监听器调用）
-public class RaffleActivityService extends AbstractRaffleActivity implements ISkuStock{
+public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAccountQuota implements IRaffleActivitySkuStockService {
     /**
      * 构造器注入活动仓储与责任链工厂
      *
      * @param activityRepository          活动仓储实现
      * @param defaultActivityChainFactory 活动动作责任链工厂
      */
-    public RaffleActivityService(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
+    public RaffleActivityAccountQuotaService(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
         super(activityRepository, defaultActivityChainFactory);
     }
 
@@ -39,7 +40,7 @@ public class RaffleActivityService extends AbstractRaffleActivity implements ISk
      * 构建下单聚合对象（模板方法钩子实现）
      *
      * <p>根据查询到的 SKU/活动/次数信息组装 {@link ActivityOrderEntity} 订单实体（生成订单号、订单时间、次数快照），
-     * 再与账户维度信息（userId/activityId/总日/月次数）一起打包为 {@link CreateOrderAggregate} 返回。
+     * 再与账户维度信息（userId/activityId/总日/月次数）一起打包为 {@link CreateQuotaOrderAggregate} 返回。
      *
      * @param skuRechargeEntity   活动商品充值实体（用户ID + SKU + 外部业务单号）
      * @param activitySkuEntity   活动商品（SKU）实体
@@ -48,7 +49,7 @@ public class RaffleActivityService extends AbstractRaffleActivity implements ISk
      * @return 组装完成的下单聚合对象
      */
     @Override
-    protected CreateOrderAggregate buildOrderAggregate(SkuRechargeEntity skuRechargeEntity, ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity) {
+    protected CreateQuotaOrderAggregate buildOrderAggregate(SkuRechargeEntity skuRechargeEntity, ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity) {
         // 订单实体对象
         ActivityOrderEntity activityOrderEntity = new ActivityOrderEntity();
         activityOrderEntity.setUserId(skuRechargeEntity.getUserId());
@@ -66,7 +67,7 @@ public class RaffleActivityService extends AbstractRaffleActivity implements ISk
         activityOrderEntity.setOutBusinessNo(skuRechargeEntity.getOutBusinessNo());
 
         // 构建聚合对象
-        return CreateOrderAggregate.builder()
+        return CreateQuotaOrderAggregate.builder()
                 .userId(skuRechargeEntity.getUserId())
                 .activityId(activitySkuEntity.getActivityId())
                 .totalCount(activityCountEntity.getTotalCount())
@@ -84,7 +85,7 @@ public class RaffleActivityService extends AbstractRaffleActivity implements ISk
      * @param createOrderAggregate 待保存的下单聚合对象
      */
     @Override
-    protected void doSaveOrder(CreateOrderAggregate createOrderAggregate) {
+    protected void doSaveOrder(CreateQuotaOrderAggregate createOrderAggregate) {
         activityRepository.doSaveOrder(createOrderAggregate);
     }
 

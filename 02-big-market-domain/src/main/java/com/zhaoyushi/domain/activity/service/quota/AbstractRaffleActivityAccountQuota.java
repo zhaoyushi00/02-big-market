@@ -1,11 +1,11 @@
-package com.zhaoyushi.domain.activity.service;
+package com.zhaoyushi.domain.activity.service.quota;
 
-import com.alibaba.fastjson.JSON;
-import com.zhaoyushi.domain.activity.model.aggregate.CreateOrderAggregate;
+import com.zhaoyushi.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import com.zhaoyushi.domain.activity.model.entity.*;
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
-import com.zhaoyushi.domain.activity.service.rule.IActionChain;
-import com.zhaoyushi.domain.activity.service.rule.factory.DefaultActivityChainFactory;
+import com.zhaoyushi.domain.activity.service.IRaffleActivityAccountQuotaService;
+import com.zhaoyushi.domain.activity.service.quota.rule.IActionChain;
+import com.zhaoyushi.domain.activity.service.quota.rule.factory.DefaultActivityChainFactory;
 import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * 抽象活动服务类，定义标准的下单流程（模板方法）
  *
- * <p>实现 {@link IRaffleOrder}，以模板方法固化“创建活动订单/充值订单”的标准步骤。
- * 子类 {@link RaffleActivityService} 只需实现两个钩子方法（构建聚合、保存订单）即可复用完整流程。
+ * <p>实现 {@link IRaffleActivityAccountQuotaService}，以模板方法固化“创建活动订单/充值订单”的标准步骤。
+ * 子类 {@link RaffleActivityAccountQuotaService} 只需实现两个钩子方法（构建聚合、保存订单）即可复用完整流程。
  *
  * <p>关键点：
  * 1. 通过构造器注入仓储与责任链工厂，子类可复用该流程；
@@ -27,7 +27,7 @@ import org.apache.commons.lang3.StringUtils;
  * @description 抽象活动抽象类，定义标准的流程
  */
 @Slf4j
-public abstract class AbstractRaffleActivity extends RaffleActivitySupport implements IRaffleOrder {
+public abstract class AbstractRaffleActivityAccountQuota extends RaffleActivityAccountQuotaSupport implements IRaffleActivityAccountQuotaService {
 
     /**
      * 构造器：注入活动仓储与责任链工厂，供子类复用标准的下单流程
@@ -35,7 +35,7 @@ public abstract class AbstractRaffleActivity extends RaffleActivitySupport imple
      * @param activityRepository          活动仓储，提供 SKU、活动、次数配置的查询能力
      * @param defaultActivityChainFactory 活动动作责任链工厂，用于获取下单前的规则校验责任链
      */
-    public AbstractRaffleActivity(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
+    public AbstractRaffleActivityAccountQuota(IActivityRepository activityRepository, DefaultActivityChainFactory defaultActivityChainFactory) {
         super(activityRepository, defaultActivityChainFactory);
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractRaffleActivity extends RaffleActivitySupport imple
         actionChain.action(activitySkuEntity, activityEntity, activityCountEntity);
 
         // 4、构建订单聚合对象
-        CreateOrderAggregate createOrderAggregate = buildOrderAggregate(skuRechargeEntity, activitySkuEntity, activityEntity, activityCountEntity);
+        CreateQuotaOrderAggregate createOrderAggregate = buildOrderAggregate(skuRechargeEntity, activitySkuEntity, activityEntity, activityCountEntity);
 
         // 5、保存订单
         doSaveOrder(createOrderAggregate);
@@ -97,7 +97,7 @@ public abstract class AbstractRaffleActivity extends RaffleActivitySupport imple
      * @param activityCountEntity 活动次数配置实体（总/日/月次数）
      * @return 组装完成的订单聚合对象
      */
-    protected abstract CreateOrderAggregate buildOrderAggregate(SkuRechargeEntity skuRechargeEntity, ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity);
+    protected abstract CreateQuotaOrderAggregate buildOrderAggregate(SkuRechargeEntity skuRechargeEntity, ActivitySkuEntity activitySkuEntity, ActivityEntity activityEntity, ActivityCountEntity activityCountEntity);
 
     /**
      * 保存订单聚合（模板方法钩子，由子类实现）
@@ -107,6 +107,6 @@ public abstract class AbstractRaffleActivity extends RaffleActivitySupport imple
      *
      * @param createOrderAggregate 待保存的订单聚合对象
      */
-    protected abstract void doSaveOrder(CreateOrderAggregate createOrderAggregate);
+    protected abstract void doSaveOrder(CreateQuotaOrderAggregate createOrderAggregate);
 
 }

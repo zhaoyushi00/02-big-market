@@ -37,6 +37,35 @@
             update_time = now()
         where user_id = #{userId} and activity_id = #{activityId}
     </update>
+    <!-- 扣减总账户额度：总/日/月剩余次数各减 1；where 中限制三项都大于 0，防止额度扣成负数 -->
+    <update id="updateActivityAccountSubtractionQuota">
+        update raffle_activity_account
+        set total_count_surplus = total_count_surplus - 1,
+            day_count_surplus = day_count_surplus - 1,
+            month_count_surplus = month_count_surplus - 1,
+            update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId} and total_count_surplus > 0 and day_count_surplus > 0 and month_count_surplus > 0
+    </update>
+    <!-- 更新总账表中的月额度镜像：月账户新建后，把当月剩余额度同步回总账（再减 1） -->
+    <update id="updateActivityAccountMonthSurplusImageQuota">
+        update raffle_activity_account
+        set month_count_surplus = #{monthCountSurplus} - 1, update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId}
+    </update>
+    <!-- 更新总账表中的日额度镜像：日账户新建后，把当日剩余额度同步回总账（再减 1） -->
+    <update id="updateActivityAccountDaySurplusImageQuota">
+        update raffle_activity_account
+        set day_count_surplus = #{dayCountSurplus} - 1, update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId}
+    </update>
+    <!-- 按用户 + 活动查询总账户（用于参与活动前的额度校验） -->
+    <select id="queryActivityAccountByUserId"
+            resultType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccount" resultMap="dataMap">
+        select user_id, activity_id, total_count, total_count_surplus, day_count,
+               day_count_surplus, month_count, month_count_surplus
+        from raffle_activity_account
+        where user_id = #{userId} and activity_id = #{activityId}
+    </select>
 
 
 </mapper>

@@ -1,9 +1,8 @@
 package com.zhaoyushi.domain.activity.repository;
 
-import com.zhaoyushi.domain.activity.model.aggregate.CreateOrderAggregate;
-import com.zhaoyushi.domain.activity.model.entity.ActivityCountEntity;
-import com.zhaoyushi.domain.activity.model.entity.ActivityEntity;
-import com.zhaoyushi.domain.activity.model.entity.ActivitySkuEntity;
+import com.zhaoyushi.domain.activity.model.aggregate.CreatePartakeOrderAggregate;
+import com.zhaoyushi.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
+import com.zhaoyushi.domain.activity.model.entity.*;
 // 引入活动 SKU 库存 Key 值对象，作为延迟队列元素与返回值类型
 import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 
@@ -13,7 +12,7 @@ import java.util.Date;
 /**
  * 活动仓储接口（领域层端口）
  *
- * <p>定义领域层需要的活动相关查询能力，由基础设施层 {@link com.zhaoyushi.infrastructure.persistent.repository.ActivityRepository} 实现。
+ * <p>定义领域层需要的活动相关查询能力，由基础设施层的 ActivityRepository 实现。
  * 领域层依赖本接口（依赖倒置），不感知底层数据库/缓存的实现细节。
  *
  * <p>关键点：三个查询方法分别对应下单链路中依次需要的信息——SKU → 活动 → 次数配置。
@@ -56,7 +55,7 @@ public interface IActivityRepository {
      *
      * @param createOrderAggregate 下单聚合对象，含订单实体与账户维度次数信息
      */
-    void doSaveOrder(CreateOrderAggregate createOrderAggregate);
+    void doSaveOrder(CreateQuotaOrderAggregate createOrderAggregate);
 
     /**
      * 缓存活动 SKU 库存数量（预热用）
@@ -110,4 +109,53 @@ public interface IActivityRepository {
      * @param sku 商品 SKU 编号
      */
     void clearActivitySkuStock(Long sku);
+
+    /**
+     * 查询用户未使用的抽奖单（order_state = 'create'）
+     *
+     * <p>用于幂等：若用户已存在未消费的抽奖单，则直接复用，不再扣减账户额度。
+     *
+     * @param partakeRaffleActivityEntity 参与抽奖活动实体（userId + activityId）
+     * @return 未使用的抽奖单，不存在时返回 null
+     */
+    UserRaffleOrderEntity queryNoUsedRaffleOrder(PartakeRaffleActivityEntity partakeRaffleActivityEntity);
+
+    /**
+     * 保存参与活动订单聚合（抽奖单 + 总/月/日账户额度扣减）
+     *
+     * <p>在同一个事务中依次：扣减总账户额度 -> 更新/新建月账户 -> 更新/新建日账户 -> 写入抽奖单。
+     * 内部以 userId 为分片键路由，并处理唯一索引冲突（幂等防重）。
+     *
+     * @param createPartakeOrderAggregate 参与活动订单聚合对象
+     */
+    void saveCreatePartakeOrderAggregate(CreatePartakeOrderAggregate createPartakeOrderAggregate);
+
+    /**
+     * 查询用户在某活动上的总账户额度
+     *
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @return 活动总账户，不存在时返回 null
+     */
+    ActivityAccountEntity queryActivityAccountByUserId(String userId, Long activityId);
+
+    /**
+     * 查询用户在某活动某月上的月账户额度
+     *
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @param month      月份（yyyy-MM）
+     * @return 月账户，不存在时返回 null
+     */
+    ActivityAccountMonthEntity queryActivityAccountMonthByUserId(String userId, Long activityId, String month);
+
+    /**
+     * 查询用户在某活动某日上的日账户额度
+     *
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @param day        日期（yyyy-MM-dd）
+     * @return 日账户，不存在时返回 null
+     */
+    ActivityAccountDayEntity queryActivityAccountDayByUserId(String userId, Long activityId, String day);
 }

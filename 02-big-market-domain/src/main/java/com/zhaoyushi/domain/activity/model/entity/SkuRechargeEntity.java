@@ -1,5 +1,6 @@
 package com.zhaoyushi.domain.activity.model.entity;
 
+import com.zhaoyushi.domain.activity.service.IRaffleActivityAccountQuotaService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
  * 活动商品充值实体对象
  *
  * <p>用于“给用户活动账户充值抽奖次数”的入参对象，对应下单服务
- * {@link com.zhaoyushi.domain.activity.service.IRaffleOrder#createSkuRechargeOrder} 的入参。
+ * {@link IRaffleActivityAccountQuotaService#createSkuRechargeOrder} 的入参。
  * 携带三个信息：谁充值（userId）、充哪个商品（sku）、本次充值的外部业务单号（outBusinessNo，用于幂等防重）。
  *
  * <p>关键点：outBusinessNo 由外部调用方透传，作为唯一索引字段，保证同一笔业务单号重复调用也不会重复充值。

@@ -6,7 +6,7 @@ import com.alibaba.fastjson2.JSON;
 // 引入 fastjson2 的 TypeReference，用于保留泛型信息做反序列化
 import com.alibaba.fastjson2.TypeReference;
 // 引入活动 SKU 库存处理接口，提供清空库存与清空队列能力
-import com.zhaoyushi.domain.activity.service.ISkuStock;
+import com.zhaoyushi.domain.activity.service.IRaffleActivitySkuStockService;
 // 引入基础事件抽象类，用于解析消息体类型
 import com.zhaoyushi.types.event.BaseEvent;
 // 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
@@ -45,7 +45,7 @@ public class ActivitySkuStockZeroCustomer {
 
     // 注入活动 SKU 库存处理服务，提供清空库存与清空队列的能力
     @Resource
-    private ISkuStock skuStock;
+    private IRaffleActivitySkuStockService skuStock;
 
     /**
      * MQ 消息监听方法

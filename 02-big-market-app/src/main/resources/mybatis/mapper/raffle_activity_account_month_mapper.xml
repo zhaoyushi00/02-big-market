@@ -2,4 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IRaffleActivityAccountMonthDao">
 
+    <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccountMonth">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="activity_id" property="activityId"/>
+        <result column="month" property="month"/>
+        <result column="month_count" property="monthCount"/>
+        <result column="month_count_surplus" property="monthCountSurplus"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 插入月账户：月账户首次建立时写入，额度与剩余额度入参给定 -->
+    <insert id="insertActivityAccountMonth" parameterType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccountMonth">
+        insert into raffle_activity_account_month(
+            user_id, activity_id, month, month_count, month_count_surplus, create_time, update_time)
+        values (
+        #{userId}, #{activityId}, #{month}, #{monthCount}, #{monthCountSurplus}, now(), now())
+    </insert>
+
+    <!-- 扣减月账户额度：当月剩余次数减 1；where 限制剩余次数大于 0，防止扣成负数 -->
+    <update id="updateActivityAccountMonthSubtractionQuota" parameterType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccountMonth">
+        update raffle_activity_account_month
+        set month_count_surplus = month_count_surplus - 1, update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId} and month = #{month} and month_count_surplus > 0
+    </update>
+    <!-- 按用户 + 活动 + 月份查询月账户（用于参与活动前的月额度校验） -->
+    <select id="queryActivityAccountMonthByUserId"
+            resultType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccountMonth" resultMap="dataMap">
+        select user_id, activity_id, month, month_count, month_count_surplus
+        from raffle_activity_account_month
+        where user_id = #{userId} and activity_id = #{activityId} and month = #{month}
+    </select>
 </mapper>

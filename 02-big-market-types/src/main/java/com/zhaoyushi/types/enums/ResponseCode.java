@@ -26,6 +26,12 @@ public enum ResponseCode {
     ACTIVITY_DATE_ERROR("ERR_BIZ_004", "非活动日期范围"),
     /** 活动库存不足：活动 SKU 库存耗尽 */
     ACTIVITY_SKU_STOCK_ERROR("ERR_BIZ_005", "活动库存不足"),
+    /** 账户总额度不足：参与活动时用户总账户剩余次数不足 */
+    ACCOUNT_QUOTA_ERROR("ERR_BIZ_006","账户总额度不足"),
+    /** 账户月额度不足：参与活动时用户当月剩余次数不足 */
+    ACCOUNT_MONTH_QUOTA_ERROR("ERR_BIZ_007","账户月额度不足"),
+    /** 账户日额度不足：参与活动时用户当日剩余次数不足 */
+    ACCOUNT_DAY_QUOTA_ERROR("ERR_BIZ_008","账户日额度不足"),
     ;
 
     private String code;

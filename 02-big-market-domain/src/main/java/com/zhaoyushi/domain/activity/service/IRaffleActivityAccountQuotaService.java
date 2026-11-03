@@ -1,18 +1,19 @@
 package com.zhaoyushi.domain.activity.service;
 
 import com.zhaoyushi.domain.activity.model.entity.SkuRechargeEntity;
+import com.zhaoyushi.domain.activity.service.quota.AbstractRaffleActivityAccountQuota;
 
 /**
  * 抽奖订单服务接口（领域服务端口）
  *
  * <p>定义“通过 SKU 下单、获得抽奖资格”的用例入口。
- * 实现类：{@link AbstractRaffleActivity}（抽象模板，固化标准下单流程）。
+ * 实现类：{@link AbstractRaffleActivityAccountQuota}（抽象模板，固化标准下单流程）。
  *
  * @author zhaoy
  * @date 2026/10/23
  * @description 抽奖订单服务接口
  */
-public interface IRaffleOrder {
+public interface IRaffleActivityAccountQuotaService {
 
     /**
      * 创建 sku 账户充值订单，给用户增加抽奖次数

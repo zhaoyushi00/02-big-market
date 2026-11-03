@@ -1,4 +1,4 @@
-package com.zhaoyushi.domain.activity.service.rule;
+package com.zhaoyushi.domain.activity.service.quota.rule;
 
 /**
  * 抽奖动作责任链装配接口

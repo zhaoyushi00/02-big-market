@@ -1,7 +1,7 @@
 package com.zhaoyushi.test.domain.activity;
 
 import com.zhaoyushi.domain.activity.model.entity.SkuRechargeEntity;
-import com.zhaoyushi.domain.activity.service.IRaffleOrder;
+import com.zhaoyushi.domain.activity.service.IRaffleActivityAccountQuotaService;
 import com.zhaoyushi.domain.activity.service.armory.IActivityArmory;
 import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
@@ -23,9 +23,9 @@ import java.util.concurrent.CountDownLatch;
 @Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class RaffleOrderTest {
+public class RaffleActivityAccountQuotaServiceTest {
     @Resource
-    private IRaffleOrder raffleOrder;
+    private IRaffleActivityAccountQuotaService raffleOrder;
     @Resource
     private IActivityArmory activityArmory;
 

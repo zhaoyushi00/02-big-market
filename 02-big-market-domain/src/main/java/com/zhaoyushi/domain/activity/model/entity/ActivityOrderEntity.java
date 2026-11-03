@@ -1,6 +1,7 @@
 package com.zhaoyushi.domain.activity.model.entity;
 
 import com.zhaoyushi.domain.activity.model.valobj.OrderStateVO;
+import com.zhaoyushi.domain.activity.service.IRaffleActivityAccountQuotaService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,7 @@ import java.util.Date;
  * <p>对应数据库表 raffle_activity_order（抽奖活动单），描述“用户某次参与抽奖的下单凭证”：
  * 记录订单号、下单时间、本次消耗的次数快照以及订单状态。
  *
- * <p>业务位置：下单服务 {@link com.zhaoyushi.domain.activity.service.IRaffleOrder#createRaffleActivityOrder}
+ * <p>业务位置：下单服务 {@link IRaffleActivityAccountQuotaService#createRaffleActivityOrder}
  * 的返回结果，作为“用户获得参与抽奖资格（可消耗次数）”的凭证返回给调用方。
  *
  * <p>关键点：
