@@ -34,6 +34,14 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        <!-- 分库分表路由组件：提供 @DBRouter/@DBRouterStrategy 注解与路由策略，用于按 userId 路由到分库分表 -->
+        <!-- https://mvnrepository.com/artifact/cn.bugstack.middleware/db-router-spring-boot-starter -->
+        <dependency>
+            <!-- 依赖组坐标：bugstack 中间件 -->
+            <groupId>cn.bugstack.middleware</groupId>
+            <!-- 依赖构件：分库分表路由 Spring Boot Starter -->
+            <artifactId>db-router-spring-boot-starter</artifactId>
+        </dependency>
 
         <!-- 系统模块 -->
         <dependency>

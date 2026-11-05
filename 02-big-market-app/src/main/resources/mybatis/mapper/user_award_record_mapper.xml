@@ -1,5 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：绑定用户中奖记录表 DAO 接口，MyBatis 依据它把下方 SQL 与接口方法一一对应 -->
 <mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IUserAwardRecordDao">
 
+    <!-- resultMap：定义 user_award_record 表列名与 UserAwardRecord 持久化对象字段之间的映射关系 -->
+    <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord">
+        <!-- 主键列 id 映射到属性 id -->
+        <id column="id" property="id"/>
+        <!-- 列 user_id 映射到属性 userId -->
+        <result column="user_id" property="userId"/>
+        <!-- 列 activity_id 映射到属性 activityId -->
+        <result column="activity_id" property="activityId"/>
+        <!-- 列 strategy_id 映射到属性 strategyId -->
+        <result column="strategy_id" property="strategyId"/>
+        <!-- 列 order_id 映射到属性 orderId -->
+        <result column="order_id" property="orderId"/>
+        <!-- 列 award_id 映射到属性 awardId -->
+        <result column="award_id" property="awardId"/>
+        <!-- 列 award_title 映射到属性 awardTitle -->
+        <result column="award_title" property="awardTitle"/>
+        <!-- 列 award_time 映射到属性 awardTime -->
+        <result column="award_time" property="awardTime"/>
+        <!-- 列 award_state 映射到属性 awardState -->
+        <result column="award_state" property="awardState"/>
+        <!-- 列 create_time 映射到属性 createTime -->
+        <result column="create_time" property="createTime"/>
+        <!-- 列 update_time 映射到属性 updateTime -->
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- insert：新增一条用户中奖记录（对应 IUserAwardRecordDao.insert） -->
+    <insert id="insert" parameterType="com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord">
+        <!-- 插入字段：用户ID、活动ID、策略ID、订单ID、奖品ID、奖品标题、中奖时间、奖品状态；创建/更新时间由数据库 now() 填充 -->
+        insert into user_award_record(
+            user_id, activity_id, strategy_id, order_id, award_id, award_title, award_time, award_state, create_time, update_time
+        ) values (
+                     #{userId},#{activityId},#{strategyId},#{orderId},#{awardId},#{awardTitle},#{awardTime},#{awardState},now(),now()
+                 )
+    </insert>
 </mapper>

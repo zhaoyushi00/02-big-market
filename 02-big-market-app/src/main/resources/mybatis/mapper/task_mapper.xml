@@ -1,5 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace：绑定任务表 DAO 接口，MyBatis 依据它把下方 SQL 与接口方法一一对应 -->
 <mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.ITaskDao">
+
+    <!-- resultMap：定义 task 表列名与 Task 持久化对象字段之间的映射关系 -->
+    <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.Task">
+        <!-- 主键列 id 映射到属性 id -->
+        <id column="id" property="id"/>
+        <!-- 列 user_id 映射到属性 userId -->
+        <result column="user_id" property="userId"/>
+        <!-- 列 topic 映射到属性 topic -->
+        <result column="topic" property="topic"/>
+        <!-- 列 message_id 映射到属性 messageId -->
+        <result column="message_id" property="messageId"/>
+        <!-- 列 message 映射到属性 message -->
+        <result column="message" property="message"/>
+        <!-- 列 state 映射到属性 state -->
+        <result column="state" property="state"/>
+        <!-- 列 create_time 映射到属性 createTime -->
+        <result column="create_time" property="createTime"/>
+        <!-- 列 update_time 映射到属性 updateTime -->
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- insert：新增一条消息任务记录（对应 ITaskDao.insert） -->
+    <insert id="insert" parameterType="com.zhaoyushi.infrastructure.persistent.po.Task">
+        <!-- 插入字段：用户ID、主题、消息编号、消息体、状态；创建/更新时间由数据库 now() 填充 -->
+        insert into task(
+            user_id, topic, message_id, message, state, create_time, update_time
+        ) values (
+                     #{userId},#{topic},#{messageId},#{message},#{state},now(),now()
+                 )
+    </insert>
+
+    <!-- update：将任务发送状态更新为「完成」（对应 ITaskDao.updateTaskSendMessageCompleted） -->
+    <update id="updateTaskSendMessageCompleted"
+            parameterType="com.zhaoyushi.infrastructure.persistent.po.Task">
+        <!-- 更新 task 表：状态置为 completed，更新时间取当前时间 -->
+        update task
+        set state = 'completed', update_time = now()
+        <!-- 更新条件：按用户 ID 与消息编号精确定位一条任务 -->
+        where user_id = #{userId} and message_id = #{messageId}
+    </update>
+
+    <!-- update：将任务发送状态更新为「失败」（对应 ITaskDao.updateTaskSendMessageFail） -->
+    <update id="updateTaskSendMessageFail" parameterType="com.zhaoyushi.infrastructure.persistent.po.Task">
+        <!-- 更新 task 表：状态置为 fail，更新时间取当前时间 -->
+        update task
+        set state = 'fail', update_time = now()
+        <!-- 更新条件：按用户 ID 与消息编号精确定位一条任务 -->
+        where user_id = #{userId} and message_id = #{messageId}
+    </update>
+
+    <!-- select：查询未发送的消息任务列表（对应 ITaskDao.queryNoSendMessageTaskList） -->
+    <select id="queryNoSendMessageTaskList" resultMap="dataMap">
+        <!-- 查询字段：用户ID、主题、消息编号、消息体 -->
+        select user_id, topic, message_id, message
+        from task
+
+         <!-- 这是整条 SQL 的核心，用 or 圈定了两种"需要重发"的情况：
+            情况①：state = 'fail' 已经明确标记为发送失败的任务，直接捞出来重试。
+            情况②：state = 'create' and now() - update_time > 6 状态还是"已创建"、但超过 6 秒都没被更新的任务。
+          意思是：这个任务创建后，既没变成 completed 也没变成 fail，卡住了（大概率是发消息的进程挂了、或异常导致状态没写回）。
+          给一个 6 秒的缓冲，避免刚创建还没处理完的任务被误捞。
+          &lt; 为 小于号 的转义-->
+
+        <!-- 过滤条件：发送失败 或 创建后超过 6 秒仍未更新 -->
+        where state = 'fail' or (state = 'create' and update_time &lt; NOW() - INTERVAL 6 SECOND)
+        <!-- 每次最多捞取 10 条，避免单次处理量过大 -->
+        limit 10
+    </select>
 
 </mapper>

@@ -26,6 +26,7 @@ spring:
         prefetch: 1 # 每次投递 n 个消息，消费完再投递 n 个（保证消费端串行、避免并发竞争）
     topic:
       activity_sku_stock_zero: activity_sku_stock_zero # 活动 SKU 库存耗尽消息的主题名
+      send_award: send_award # 发奖消息的主题名（中奖记录写入后投递发奖 MQ 使用）
 
 # 线程池配置
 thread:

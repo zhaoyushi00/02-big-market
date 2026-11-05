@@ -43,8 +43,6 @@ public class UpdateActivitySkuStockJob {
     public void exec() {
         // 使用 try-catch 包裹，保证任务异常不中断后续调度
         try {
-            // 记录任务开始日志：说明采用延迟队列获取，降低数据库更新频次、避免竞争
-            log.info("定时任务，更新活动sku库存【延迟队列获取，降低对数据库的更新频次，不要产生竞争】");
             // 从延迟队列取出一个库存扣减记录（队列为空时返回 null）
             ActivitySkuStockKeyVO activitySkuStockKeyVO = skuStock.takeQueueValue();
             // 队列为空则直接返回，等待下一次调度

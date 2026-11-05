@@ -57,4 +57,29 @@ public class EventPublisher {
         }
     }
 
+    /**
+     * 发布 JSON 字符串形式的消息到指定 topic（重载方法）
+     *
+     * <p>与上面的 {@link #publish(String, BaseEvent.EventMessage)} 不同，本方法直接接收
+     * 已序列化好的 JSON 字符串消息，用于「消息任务补偿」场景——从 task 表取出消息体（JSON）后直接发送，
+     * 无需再经过对象序列化。
+     *
+     * @param topic            目标主题（交换机/队列名）
+     * @param eventMessageJSON 已序列化为 JSON 字符串的事件消息
+     */
+    public void publish(String topic, String eventMessageJSON){
+        // 使用 try-catch 包裹发送逻辑，便于在异常时记录失败日志并向上抛出
+        try {
+            // 通过 RabbitTemplate 将 JSON 字符串消息直接发送到指定 topic
+            rabbitTemplate.convertAndSend(topic, eventMessageJSON);
+            // 记录发送成功日志（topic 与消息内容）
+            log.info("发送MQ消息 topic:{} message:{}", topic, eventMessageJSON);
+        } catch (Exception e) {
+            // 记录发送失败日志（topic、消息内容、异常堆栈）
+            log.error("发送MQ消息失败 topic:{} message:{}", topic, eventMessageJSON, e);
+            // 重新抛出异常，交由上层（任务补偿机制）处理
+            throw e;
+        }
+    }
+
 }
