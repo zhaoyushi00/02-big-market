@@ -29,8 +29,12 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
 
 // 引入 java.util.Date，作为活动结束时间参数类型
+// 引入 ArrayList，用于创建指定容量的 SKU 实体列表
+import java.util.ArrayList;
 import java.util.Date;
 // 引入 java.util.concurrent.TimeUnit，用于时间单位换算（延迟队列、锁过期时间）
+// 引入 List 集合，作为按活动查询 SKU 列表的返回类型
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -630,5 +634,37 @@ public class ActivityRepository implements IActivityRepository {
                 .dayCount(raffleActivityAccountDayRes.getDayCount())
                 .dayCountSurplus(raffleActivityAccountDayRes.getDayCountSurplus())
                 .build();
+    }
+
+    /**
+     * 根据活动 ID 查询活动下配置的 SKU 列表
+     * <p>通过 DAO 查出活动下全部 SKU 持久化对象，逐条转换为领域实体后返回。
+     *
+     * @param activityId 活动ID
+     * @return 活动 SKU 领域实体列表
+     */
+    @Override
+    public List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId) {
+        // 通过 DAO 查询活动下配置的全部 SKU 持久化对象
+        List<RaffleActivitySku> raffleActivitySkus = raffleActivitySkuDao.queryActivitySkuListByActivityId(activityId);
+        // 创建领域实体列表，初始容量与查询结果一致，避免扩容
+        List<ActivitySkuEntity> activitySkuEntities = new ArrayList<>(raffleActivitySkus.size());
+        // 遍历每一个 SKU 持久化对象，逐一转换为领域实体
+        for (RaffleActivitySku raffleActivitySku:raffleActivitySkus){
+            // 新建领域实体对象
+            ActivitySkuEntity activitySkuEntity = new ActivitySkuEntity();
+            // 拷贝 SKU 编号
+            activitySkuEntity.setSku(raffleActivitySku.getSku());
+            // 拷贝活动次数配置 ID
+            activitySkuEntity.setActivityCountId(raffleActivitySku.getActivityCountId());
+            // 拷贝库存总量
+            activitySkuEntity.setStockCount(raffleActivitySku.getStockCount());
+            // 拷贝剩余库存
+            activitySkuEntity.setStockCountSurplus(raffleActivitySku.getStockCountSurplus());
+            // 将转换后的领域实体加入列表
+            activitySkuEntities.add(activitySkuEntity);
+        }
+        // 返回活动 SKU 领域实体列表
+        return activitySkuEntities;
     }
 }

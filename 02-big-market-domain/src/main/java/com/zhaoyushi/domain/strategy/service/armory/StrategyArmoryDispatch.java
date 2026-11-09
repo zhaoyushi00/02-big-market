@@ -79,6 +79,22 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     }
 
     /**
+     * 按活动 ID 装配抽奖策略
+     * <p>先根据活动 ID 反查其绑定的策略 ID，再复用 {@link #assembleLotteryStrategy(Long)} 完成策略装配，
+     * 作为活动装配（armory）入口中策略维度的统一调用。
+     *
+     * @param activityId 活动ID，用于定位活动绑定的策略
+     * @return 装配结果，true 表示装配成功
+     */
+    @Override
+    public boolean assembleLotteryStrategyByActivityId(Long activityId) {
+        // 根据活动 ID 查询其绑定的策略 ID
+        Long strategyId = repository.queryStrategyIdByActivityId(activityId);
+        // 委托策略装配主流程完成装配并返回结果
+        return assembleLotteryStrategy(strategyId);
+    }
+
+    /**
      * 缓存奖品初始库存
      * <p>拼接库存缓存 Key，并委托仓储层将奖品初始库存写入 Redis 原子计数器，
      * 供抽奖时通过 decr 原子扣减。注意：只在库存缓存不存在时初始化，避免重复装配时覆盖已扣减的库存。

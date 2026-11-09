@@ -30,4 +30,13 @@ public interface IUserRaffleOrderDao {
      */
     @DBRouter
     UserRaffleOrder queryNoUsedRaffleOrder(UserRaffleOrder userRaffleOrderReq);
+
+    /**
+     * 更新用户抽奖单状态为已使用（used）
+     * <p>在中奖记录写入时调用，将 order_state 从 create 更新为 used，防止同一抽奖单被重复抽奖。
+     *
+     * @param userRaffleOrderReq 更新条件（userId + orderId）
+     * @return 受影响行数，返回 1 表示更新成功
+     */
+    int updateUserRaffleOrderStateUsed(UserRaffleOrder userRaffleOrderReq);
 }

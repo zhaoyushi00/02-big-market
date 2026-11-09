@@ -8,6 +8,7 @@ import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 
 // 引入 java.util.Date，作为活动结束时间参数类型
 import java.util.Date;
+import java.util.List;
 
 /**
  * 活动仓储接口（领域层端口）
@@ -158,4 +159,14 @@ public interface IActivityRepository {
      * @return 日账户，不存在时返回 null
      */
     ActivityAccountDayEntity queryActivityAccountDayByUserId(String userId, Long activityId, String day);
+
+    /**
+     * 查询活动下配置的 SKU 列表
+     * <p>按活动 ID 一次性查询该活动关联的全部 SKU 商品（含库存、活动次数配置ID），
+     * 供活动装配（armory）时批量预热 SKU 库存使用。
+     *
+     * @param activityId 活动ID，用于过滤活动下的 SKU
+     * @return 活动 SKU 实体列表
+     */
+    List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId);
 }

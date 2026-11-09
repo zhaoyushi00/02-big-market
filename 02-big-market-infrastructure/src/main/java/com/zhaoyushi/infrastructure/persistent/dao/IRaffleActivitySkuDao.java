@@ -3,6 +3,9 @@ package com.zhaoyushi.infrastructure.persistent.dao;
 import com.zhaoyushi.infrastructure.persistent.po.RaffleActivitySku;
 import org.apache.ibatis.annotations.Mapper;
 
+// 引入 List 集合，作为按活动查询 SKU 列表的返回类型
+import java.util.List;
+
 /**
  * 抽奖活动 sku 表（RaffleActivitySku）数据库访问层
  *
@@ -39,4 +42,14 @@ public interface IRaffleActivitySkuDao {
      * @param sku 商品 SKU 编号
      */
     void clearActivitySkuStock(Long sku);
+
+    /**
+     * 根据活动 ID 查询活动下配置的 SKU 列表
+     * <p>一次性查出一个活动关联的全部 SKU 商品（含 SKU 编号、活动次数配置ID、库存总量与剩余库存），
+     * 供活动装配时批量预热库存使用。
+     *
+     * @param activityId 活动ID
+     * @return 活动 SKU 持久化对象列表
+     */
+    List<RaffleActivitySku> queryActivitySkuListByActivityId(Long activityId);
 }

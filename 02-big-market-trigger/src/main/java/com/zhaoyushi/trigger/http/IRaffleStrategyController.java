@@ -7,11 +7,11 @@ import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.service.IRaffleAward;
 import com.zhaoyushi.domain.strategy.service.IRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyArmory;
-import com.zhaoyushi.trigger.api.IRaffleService;
+import com.zhaoyushi.trigger.api.IRaffleStrategyService;
 import com.zhaoyushi.trigger.api.dto.RaffleAwardListRequestDTO;
 import com.zhaoyushi.trigger.api.dto.RaffleAwardListResponseDTO;
-import com.zhaoyushi.trigger.api.dto.RaffleRequestDTO;
-import com.zhaoyushi.trigger.api.dto.RaffleResponseDTO;
+import com.zhaoyushi.trigger.api.dto.RaffleStrategyRequestDTO;
+import com.zhaoyushi.trigger.api.dto.RaffleStrategyResponseDTO;
 import com.zhaoyushi.trigger.api.response.Response;
 import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
@@ -23,6 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 抽奖策略服务控制器
+ * <p>由原抽奖控制器（IRaffleController）重命名而来，职责聚焦于「策略维度」的抽奖接口：
+ * <pre>
+ * 1. strategy_armory          - 策略装配（预热）；
+ * 2. query_raffle_award_list  - 查询奖品列表；
+ * 3. random_raffle            - 随机抽奖。
+ * </pre>
+ * 与新增的活动维度抽奖控制器（RaffleActivityController）区分开。
+ *
  * @author zhaoy
  * @date 2026/10/14
  * @description 抽奖服务
@@ -33,9 +42,10 @@ import java.util.List;
 @RestController()
 // 允许跨域访问，跨域地址从配置文件 app.config.cross-origin 读取
 @CrossOrigin("${app.config.cross-origin}")
-// 定义该类所有接口的公共请求路径前缀，拼接后形如 /api/v1/raffle/
-@RequestMapping("/api/${app.config.api-version}/raffle/")
-public class IRaffleController implements IRaffleService {
+// 定义该类所有接口的公共请求路径前缀，拼接后形如 /api/v1/raffle/strategy
+@RequestMapping("/api/${app.config.api-version}/raffle/strategy")
+// 实现策略维度抽奖服务接口 IRaffleStrategyService
+public class IRaffleStrategyController implements IRaffleStrategyService {
 
     // 注入策略装配服务，用于将抽奖策略数据装配到 Redis 缓存
     @Resource
@@ -160,7 +170,7 @@ public class IRaffleController implements IRaffleService {
     @RequestMapping(value = "random_raffle", method = RequestMethod.POST)
     // 覆盖接口 IRaffleService 中声明的随机抽奖方法
     @Override
-    public Response<RaffleResponseDTO> randomRaffle(@RequestBody RaffleRequestDTO requestDTO) {
+    public Response<RaffleStrategyResponseDTO> randomRaffle(@RequestBody RaffleStrategyRequestDTO requestDTO) {
         try {
             // 记录随机抽奖开始的日志，包含策略ID
             log.info("随机抽奖开始 strategyId: {}", requestDTO.getStrategyId());
@@ -173,13 +183,13 @@ public class IRaffleController implements IRaffleService {
                     // 构建抽奖因子实体
                     .build());
             // 封装返回结果，构建抽奖成功的响应体
-            Response<RaffleResponseDTO> response = Response.<RaffleResponseDTO>builder()
+            Response<RaffleStrategyResponseDTO> response = Response.<RaffleStrategyResponseDTO>builder()
                     // 设置响应码为成功
                     .code(ResponseCode.SUCCESS.getCode())
                     // 设置响应信息为成功
                     .info(ResponseCode.SUCCESS.getInfo())
                     // 设置响应数据为抽奖结果
-                    .data(RaffleResponseDTO.builder()
+                    .data(RaffleStrategyResponseDTO.builder()
                             // 设置中奖奖品ID
                             .awardId(raffleAwardEntity.getAwardId())
                             // 设置中奖奖品索引
@@ -196,7 +206,7 @@ public class IRaffleController implements IRaffleService {
             // 记录业务异常日志，包含策略ID和异常信息
             log.error("随机抽奖失败 strategyId：{} {}", requestDTO.getStrategyId(), e.getInfo());
             // 构建业务异常的响应体
-            return Response.<RaffleResponseDTO>builder()
+            return Response.<RaffleStrategyResponseDTO>builder()
                     // 设置响应码为业务异常码
                     .code(e.getCode())
                     // 设置响应信息为业务异常信息
@@ -207,7 +217,7 @@ public class IRaffleController implements IRaffleService {
             // 记录系统异常日志，包含策略ID和异常堆栈
             log.error("随机抽奖失败 strategyId：{}", requestDTO.getStrategyId(), e);
             // 构建系统异常的响应体
-            return Response.<RaffleResponseDTO>builder()
+            return Response.<RaffleStrategyResponseDTO>builder()
                     // 设置响应码为未知错误
                     .code(ResponseCode.UN_ERROR.getCode())
                     // 设置响应信息为未知错误

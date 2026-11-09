@@ -19,10 +19,14 @@ import com.zhaoyushi.infrastructure.event.EventPublisher;
 import com.zhaoyushi.infrastructure.persistent.dao.ITaskDao;
 // 引入用户中奖记录表 DAO，用于中奖记录的写入
 import com.zhaoyushi.infrastructure.persistent.dao.IUserAwardRecordDao;
+// 引入用户抽奖订单表 DAO，用于更新抽奖单状态为已使用
+import com.zhaoyushi.infrastructure.persistent.dao.IUserRaffleOrderDao;
 // 引入任务表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.Task;
 // 引入用户中奖记录表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord;
+// 引入用户抽奖订单表持久化对象，作为更新抽奖单状态的入参
+import com.zhaoyushi.infrastructure.persistent.po.UserRaffleOrder;
 // 引入响应码枚举，用于抛出业务异常时携带错误码
 import com.zhaoyushi.types.enums.ResponseCode;
 // 引入应用异常类，用于抛出业务异常
@@ -71,6 +75,9 @@ public class AwardRepository implements IAwardRepository {
     // 注入消息发送器，用于向 MQ 投递发奖消息
     @Resource
     private EventPublisher eventPublisher;
+    // 注入用户抽奖订单表 DAO，用于将抽奖单状态更新为已使用（防重复抽奖）
+    @Resource
+    private IUserRaffleOrderDao userRaffleOrderDao;
 
     /**
      * 保存用户中奖记录（聚合）
@@ -125,6 +132,13 @@ public class AwardRepository implements IAwardRepository {
         // 设置任务状态（取枚举的 code 值落库，初始为 create）
         task.setState(taskEntity.getState().getCode());
 
+        // 构建抽奖单更新条件对象（PO），用于把对应抽奖单状态更新为已使用
+        UserRaffleOrder userRaffleOrderReq = new UserRaffleOrder();
+        // 设置用户 ID（更新条件之一）
+        userRaffleOrderReq.setUserId(userAwardRecordEntity.getUserId());
+        // 设置订单 ID（更新条件之二）
+        userRaffleOrderReq.setOrderId(userAwardRecordEntity.getOrderId());
+
         // 8. 开启分库路由 + 事务，保证两张表写入的一致性
         try {
             // 8.1 根据用户 ID 计算并指定本次 SQL 落库的分库
@@ -136,6 +150,17 @@ public class AwardRepository implements IAwardRepository {
                     userAwardRecordDao.insert(userAwardRecord);
                     // 8.4 写入任务记录
                     taskDao.insert(task);
+                    // 更新抽奖单状态为已使用：将 order_state 从 create 更新为 used
+                    int count = userRaffleOrderDao.updateUserRaffleOrderStateUsed(userRaffleOrderReq);
+                    // 更新行数不为 1 说明抽奖单已非 create 状态（已被使用过）
+                    if (1 != count) {
+                        // 标记事务回滚，撤销已写入的中奖记录与任务记录
+                        status.setRollbackOnly();
+                        // 记录重复抽奖的异常日志
+                        log.error("写入中奖记录，用户抽奖单已使用过，不可重复抽奖 userId: {} activityId: {} awardId: {}", userId, activityId, awardId);
+                        // 抛出业务异常，提示抽奖单已使用
+                        throw new AppException(ResponseCode.ACTIVITY_ORDER_ERROR.getCode(), ResponseCode.ACTIVITY_ORDER_ERROR.getInfo());
+                    }
                     // 8.5 返回任意值，表示事务内逻辑执行成功（execute 需要返回值）
                     return 1;
                     // 8.6 捕获唯一索引冲突（如 order_id 幂等键重复）

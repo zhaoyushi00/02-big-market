@@ -16,8 +16,10 @@
         from big_market.strategy
         limit 10
     </select>
+    <!-- 按策略ID查询策略信息（id 对应 DAO 方法 queryStrategyByStrategyId） -->
     <select id="queryStrategyByStrategyId" resultMap="dataMap">
-        select strategy_id, strategy_desc, rule_model
+        <!-- 查询策略核心字段，rule_models 为修正后的列名（原为 rule_model，与建表列名不一致） -->
+        select strategy_id, strategy_desc, rule_models
         from big_market.strategy
         where strategy_id = #{strategyId}
     </select>

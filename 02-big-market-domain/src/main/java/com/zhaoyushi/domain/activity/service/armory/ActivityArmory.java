@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 // 引入 java.util.Date，作为活动结束时间参数类型
 import java.util.Date;
+// 引入 List 集合，作为按活动查询 SKU 列表的返回类型
+import java.util.List;
 
 /**
  * 活动 SKU 预热（装配）与调度实现
@@ -33,6 +35,34 @@ public class ActivityArmory implements IActivityArmory, IActivityDispatch{
     // 注入活动仓储接口，用于查询与操作活动 SKU 库存缓存
     @Resource
     private IActivityRepository activityRepository;
+
+    /**
+     * 按活动 ID 装配（预热）活动 SKU 库存
+     * <p>一次查询活动下全部 SKU，批量将「SKU 剩余库存」写入 Redis 缓存，
+     * 并顺带触发活动次数、活动信息的查询预热。
+     *
+     * @param activityId 活动ID，用于定位活动下配置的 SKU 集合
+     * @return 装配结果，固定返回 true 表示装配成功
+     */
+    @Override
+    public boolean assembleActivitySkuByActivityId(Long activityId) {
+        // 按活动 ID 查询活动下配置的全部 SKU 实体
+        List<ActivitySkuEntity> activitySkuEntities = activityRepository.queryActivitySkuListByActivityId(activityId);
+
+        // 遍历每一个 SKU，逐一预热其库存与关联的活动次数
+        for (ActivitySkuEntity activitySkuEntity : activitySkuEntities){
+            // 将 SKU 剩余库存数量缓存到 Redis 原子计数器
+            cacheActivitySkuCount(activitySkuEntity.getSku(), activitySkuEntity.getStockCountSurplus());
+            // 预热活动次数【查询时预热到缓存】：触发次数配置查询，命中则写入缓存
+            activityRepository.queryRaffleActivityCountByActivityCountId(activitySkuEntity.getActivityCountId());
+        }
+
+        // 预热活动【查询时预热到缓存】：触发活动信息查询，命中则写入缓存
+        activityRepository.queryRaffleActivityByActivityId(activityId);
+
+        // 返回装配成功标识
+        return true;
+    }
 
     /**
      * 装配（预热）活动 SKU 库存

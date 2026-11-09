@@ -42,7 +42,9 @@
         select rule_models from strategy_award
         where strategy_id = #{strategyId} and award_id = #{awardId}
     </select>
-    <select id="queryStrategyAward" resultType="com.zhaoyushi.infrastructure.persistent.po.StrategyAward">
+    <!-- 按策略ID+奖品ID查询单个奖品信息（id 对应 DAO 方法 queryStrategyAward，resultMap 用于把含下划线字段正确映射） -->
+    <select id="queryStrategyAward" resultType="com.zhaoyushi.infrastructure.persistent.po.StrategyAward" resultMap="dataMap">
+        <!-- 查询奖品核心字段（含规则模型与排序），条件：策略ID + 奖品ID 匹配 -->
         select strategy_id, award_id, award_title, award_subtitle, award_count, award_count_surplus, award_rate, rule_models, sort
         from strategy_award
         where strategy_id = #{strategyId} and award_id = #{awardId}

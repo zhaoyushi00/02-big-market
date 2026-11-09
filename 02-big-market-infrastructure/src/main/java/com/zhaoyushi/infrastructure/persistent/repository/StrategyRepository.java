@@ -33,6 +33,12 @@ import static com.zhaoyushi.types.enums.ResponseCode.UN_ASSEMBLED_STRATEGY_ARMOR
 @Repository
 public class StrategyRepository implements IStrategyRepository {
 
+    // 注入活动 DAO，用于按活动 ID 反查策略 ID / 按策略 ID 反查活动 ID
+    @Resource
+    private IRaffleActivityDao raffleActivityDao;
+    // 注入活动日账户 DAO，用于查询用户当日的活动账户记录
+    @Resource
+    private IRaffleActivityAccountDayDao raffleActivityAccountDayDao;
     @Resource
     private IStrategyDao strategyDao;
     @Resource
@@ -474,6 +480,48 @@ public class StrategyRepository implements IStrategyRepository {
         redisService.setValue(cacheKey, strategyAwardEntity);
         // 返回数据
         return strategyAwardEntity;
+    }
+
+    /**
+     * 根据活动 ID 查询绑定的策略 ID
+     * <p>直接委托活动 DAO 查询，活动与策略为 1:1 绑定关系。
+     *
+     * @param activityId 活动ID
+     * @return 策略ID
+     */
+    @Override
+    public Long queryStrategyIdByActivityId(Long activityId) {
+        // 委托活动 DAO 反查策略 ID 并返回
+        return raffleActivityDao.queryStrategyIdByActivityId(activityId);
+    }
+
+    /**
+     * 查询用户今日参与抽奖次数
+     * <p>先按策略 ID 反查活动 ID，再查询该用户当日的活动账户记录，
+     * 用「日总次数 - 日剩余次数」计算出今日已参与抽奖次数。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @return 用户今日参与次数
+     */
+    @Override
+    public Integer queryTodayUserRaffleCount(String userId, Long strategyId) {
+        // 活动ID：按策略 ID 反查绑定的活动 ID
+        Long activityId = raffleActivityDao.queryActivityIdByStrategyId(strategyId);
+        // 封装查询参数对象（PO），作为查询日账户记录的入参
+        RaffleActivityAccountDay raffleActivityAccountDayReq = new RaffleActivityAccountDay();
+        // 设置用户 ID
+        raffleActivityAccountDayReq.setUserId(userId);
+        // 设置活动 ID
+        raffleActivityAccountDayReq.setActivityId(activityId);
+        // 设置查询日期为当天（yyyy-MM-dd）
+        raffleActivityAccountDayReq.setDay(raffleActivityAccountDayReq.currentDay());
+        // 按用户+活动+日期查询日账户记录
+        RaffleActivityAccountDay raffleActivityAccountDay = raffleActivityAccountDayDao.queryActivityAccountDayByUserId(raffleActivityAccountDayReq);
+        // 未查询到账户记录说明用户今日未参与过该活动，返回 0
+        if (null == raffleActivityAccountDay) return 0;
+        // 总次数 - 剩余的，等于今日参与的
+        return raffleActivityAccountDay.getDayCount() - raffleActivityAccountDay.getDayCountSurplus();
     }
 
 }

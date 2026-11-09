@@ -24,6 +24,15 @@
                   #{userId}, #{activityId}, #{activityName}, #{strategyId}, #{orderId}, #{orderTime}, #{orderState}, now(), now()
               )
     </insert>
+    <!-- 更新抽奖单状态为已使用（id 对应 DAO 方法 updateUserRaffleOrderStateUsed） -->
+    <update id="updateUserRaffleOrderStateUsed">
+        <!-- 更新目标表：用户抽奖订单表 -->
+        update user_raffle_order
+        <!-- 订单状态置为 used，并刷新更新时间 -->
+        set order_state = 'used', update_time = now()
+        <!-- 条件：用户 + 订单匹配，且当前状态必须是 create（防止重复更新/重复抽奖） -->
+        where user_id = #{userId} and order_id = #{orderId} and order_state = 'create'
+    </update>
 
     <!-- 查询用户未使用的抽奖单：仅取 order_state = 'create' 的订单，用于幂等（避免重复扣额度） -->
     <select id="queryNoUsedRaffleOrder"

@@ -94,6 +94,27 @@ public abstract class AbstractRaffleActivityPartake implements IRaffleActivityPa
     }
 
     /**
+     * 创建抽奖单（便捷重载）
+     * <p>将「用户ID + 活动ID」两个入参封装为参与活动实体后，委托给 {@link #createOrder(PartakeRaffleActivityEntity)}
+     * 完成后续创建订单流程，避免调用方手工组装实体。
+     *
+     * @param userId     用户ID
+     * @param activityId 活动ID
+     * @return 用户抽奖订单实体对象
+     */
+    @Override
+    public UserRaffleOrderEntity createOrder(String userId, Long activityId) {
+        // 使用构建者模式组装参与活动实体，再复用主流程创建订单
+        return createOrder(PartakeRaffleActivityEntity.builder()
+                // 设置活动ID
+                .activityId(activityId)
+                // 设置用户ID
+                .userId(userId)
+                // 构建参与活动实体对象
+                .build());
+    }
+
+    /**
      * 构建抽奖单实体（模板方法钩子，由子类实现）
      *
      * @param userId      用户ID

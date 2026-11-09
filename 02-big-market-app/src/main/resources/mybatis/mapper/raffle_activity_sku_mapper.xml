@@ -44,5 +44,11 @@
         from raffle_activity_sku
         where sku = #{sku}
     </select>
+    <!-- 按活动ID查询活动下配置的 SKU 列表（id 对应 DAO 方法 queryActivitySkuListByActivityId） -->
+    <select id="queryActivitySkuListByActivityId"
+            resultType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivitySku" resultMap="dataMap">
+        <!-- 查询活动 SKU 的关键字段（SKU 编号、次数配置ID、库存总量、剩余库存），条件：活动ID 匹配 -->
+        select sku, activity_count_id, stock_count, stock_count_surplus from raffle_activity_sku where activity_id = #{activityId}
+    </select>
 
 </mapper>

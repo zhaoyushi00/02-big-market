@@ -33,5 +33,17 @@
         where activity_id = #{activityId}
     </select>
 
+    <!-- 按活动ID查询绑定的策略ID（返回 Long，id 对应 DAO 方法 queryStrategyIdByActivityId） -->
+    <select id="queryStrategyIdByActivityId" resultType="java.lang.Long">
+        <!-- 查询活动表的策略ID，条件：活动ID 匹配 -->
+        select strategy_id from raffle_activity where activity_id = #{activityId}
+    </select>
+
+    <!-- 按策略ID查询绑定的活动ID（返回 Long，id 对应 DAO 方法 queryActivityIdByStrategyId） -->
+    <select id="queryActivityIdByStrategyId" resultType="java.lang.Long">
+        <!-- 查询活动表的活动ID，条件：策略ID 匹配 -->
+        select activity_id from raffle_activity where strategy_id = #{strategyId}
+    </select>
+
 
 </mapper>

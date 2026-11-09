@@ -81,9 +81,15 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
     private RaffleAwardEntity buildRaffleAwardEntity(Long strategyId, Integer awardId, String awardConfig) {
         StrategyAwardEntity strategyAward = repository.queryStrategyAwardEntity(strategyId, awardId);
         return RaffleAwardEntity.builder()
+                // 设置奖品ID
                 .awardId(awardId)
+                // 设置奖品标题：从策略奖品实体中取出，供活动抽奖返回时展示
+                .awardTitle(strategyAward.getAwardTitle())
+                // 设置奖品配置信息
                 .awardConfig(awardConfig)
+                // 设置奖品顺序号
                 .sort(strategyAward.getSort())
+                // 构建抽奖奖品实体
                 .build();
     }
 
