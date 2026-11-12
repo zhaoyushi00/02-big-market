@@ -2,6 +2,8 @@ package com.zhaoyushi.domain.strategy.service.rule.tree.factory.engine;
 
 import com.zhaoyushi.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 
+import java.util.Date;
+
 /**
  * @author zhaoy
  * @date 2026/9/30
@@ -19,11 +21,12 @@ public interface IDecisionTreeEngine {
      * <p>输入用户、策略、奖品，从根节点开始沿连线逐级向下遍历，最终返回 StrategyAwardData
      * （最终奖品 ID 和奖品规则值）。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    候选奖品ID
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     候选奖品ID
+     * @param endDateTime 活动结束时间，透传给各节点的 logic()，库存扣减节点用其给锁 Key 设过期时间
      * @return 最终奖品数据（奖品ID与奖品规则值），未接管时可能为 null
      */
-    DefaultTreeFactory.StrategyAwardVO process(String userId, Long strategyId, Integer awardId);
+    DefaultTreeFactory.StrategyAwardVO process(String userId, Long strategyId, Integer awardId, Date endDateTime);
 
 }

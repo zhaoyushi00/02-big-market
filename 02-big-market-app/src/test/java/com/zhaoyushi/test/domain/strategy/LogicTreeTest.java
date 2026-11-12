@@ -112,8 +112,8 @@ public class LogicTreeTest {
         // 6. 通过工厂打开决策树，得到执行引擎
         IDecisionTreeEngine treeEngine = defaultTreeFactory.openLogicTree(ruleTreeVO);
 
-        // 7. 执行决策树并打印最终奖品结果
-        DefaultTreeFactory.StrategyAwardVO data = treeEngine.process("zhaoyushi", 100001L, 100);
+        // 7. 执行决策树并打印最终奖品结果（末位 null 为活动结束时间，本测试不涉及库存锁过期，传 null）
+        DefaultTreeFactory.StrategyAwardVO data = treeEngine.process("zhaoyushi", 100001L, 100, null);
         log.info("测试结果：{}", JSON.toJSONString(data));
 
     }

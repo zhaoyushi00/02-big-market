@@ -43,5 +43,7 @@ public class UserRaffleOrderEntity {
     private Date orderTime;
     /** 订单状态：create-创建、used-已使用、cancel-已作废 */
     private UserRaffleOrderStateVO orderState;
+    /** 活动结束时间：创建订单时从活动实体冗余带入，后续抽奖时透传到库存扣减链路，作为锁 Key 过期时间基准 */
+    private Date endDateTime;
 
 }

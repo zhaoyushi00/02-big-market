@@ -10,6 +10,8 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 /**
  * @author zhaoy
  * @date 2026/9/30
@@ -30,19 +32,22 @@ public class RuleStockLogicTreeNode implements ILogicTreeNode {
 
     /**
      * 执行库存规则判断
-     * <p>当前占位实现：固定返回接管（TAKE_OVER），交由引擎沿 TAKE_OVER 连线走向下一节点。
+     * <p>对候选奖品执行库存扣减：扣减成功返回接管（TAKE_OVER），把扣减记录投递到延时队列异步回写数据库，
+     * 并携带最终奖品数据；扣减失败（库存不足）返回放行（ALLOW），由后续节点兜底处理。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    候选奖品ID
-     * @return 固定接管的节点判定结果
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     候选奖品ID
+     * @param ruleValue   节点规则值（本节点未使用）
+     * @param endDateTime 活动结束时间，用于给扣减后抢占的锁 Key 设置过期时间
+     * @return 扣减成功返回接管（含奖品数据），失败返回放行
      */
     @Override
-    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime) {
 
         log.info("规则过滤-库存扣减 userId:{} strategyId:{} awardId:{}", userId, strategyId, awardId);
-        // 扣减库存
-        Boolean status = strategyDispatch.subtractionAwardStock(strategyId, awardId);
+        // 扣减库存（把活动结束时间透传，用于给锁 Key 设置过期时间）
+        Boolean status = strategyDispatch.subtractionAwardStock(strategyId, awardId, endDateTime);
         if (status){
             // 写入延时队列，延迟消费更新数据库记录【在trigger的job：UpdateAwardStockJob下消费队列，更新数据库记录】
             strategyRepository.awardStockConsumeSendQueue(StrategyAwardStockKeyVO.builder()

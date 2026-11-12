@@ -11,6 +11,7 @@ import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.domain.strategy.service.AbstractRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.IRaffleAward;
+import com.zhaoyushi.domain.strategy.service.IRaffleRule;
 import com.zhaoyushi.domain.strategy.service.IRaffleStock;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyDispatch;
 import com.zhaoyushi.domain.strategy.service.rule.chain.ILogicChain;
@@ -23,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,7 +37,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRaffleAward, IRaffleStock {
+public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRaffleAward, IRaffleStock, IRaffleRule {
 
     //在创建对象时，接收外部传入的依赖，并转交给父类完成初始化
     //DefaultChainFactory defaultChainFactory：责任链工厂，负责根据策略配置组装责任链。
@@ -62,10 +64,9 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
     }
 
     /**
-     * 规则树抽奖过滤
-     * <p>根据责任链命中的奖品ID查询其配置的规则模型，打开对应的决策树并执行过滤，
-     * 依次经过抽奖次数判断、库存扣减、兜底奖励等节点，返回最终可获得奖品。
-     * 若奖品未配置规则模型则直接返回原奖品；若配置的规则树不存在则抛出异常提示配置缺失。
+     * 规则树抽奖过滤（三参重载，兼容旧调用）
+     * <p>活动结束时间传 null，即库存扣减锁 Key 不设置过期时间；仅用于兼容旧代码，
+     * 新链路应优先调用带 endDateTime 的四参重载。
      *
      * @param userId     用户ID
      * @param strategyId 策略ID
@@ -74,6 +75,24 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
      */
     @Override
     public DefaultTreeFactory.StrategyAwardVO raffleLogicTree(String userId, Long strategyId, Integer awardId) {
+        return raffleLogicTree(userId, strategyId, awardId, null);
+    }
+
+    /**
+     * 规则树抽奖过滤（四参重载，带活动结束时间）
+     * <p>根据责任链命中的奖品ID查询其配置的规则模型，打开对应的决策树并执行过滤，
+     * 依次经过抽奖次数判断、库存扣减、兜底奖励等节点，返回最终可获得奖品。
+     * 若奖品未配置规则模型则直接返回原奖品；若配置的规则树不存在则抛出异常提示配置缺失。
+     * 活动结束时间会透传到库存扣减节点，用于给锁 Key 设置过期时间。
+     *
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     责任链命中的候选奖品ID
+     * @param endDateTime 活动结束时间，可为 null
+     * @return 规则树过滤结果（含最终奖品ID与奖品规则值）
+     */
+    @Override
+    public DefaultTreeFactory.StrategyAwardVO raffleLogicTree(String userId, Long strategyId, Integer awardId, Date endDateTime) {
         // 1. 查询策略下该奖品配置的规则模型，得到规则模型 Key（用于定位规则树）
         StrategyAwardRuleModelVO strategyAwardRuleModelVO = repository.queryStrategyAwardRuleModelVO(strategyId, awardId);
         // 2. 未配置规则模型：无需过滤，直接返回原奖品
@@ -89,7 +108,7 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
         }
         // 5. 打开决策树引擎并执行过滤（次数判断、库存扣减、兜底奖励），返回最终可获得奖品
         IDecisionTreeEngine treeEngine = defaultTreeFactory.openLogicTree(ruleTreeVO);
-        return treeEngine.process(userId, strategyId, awardId);
+        return treeEngine.process(userId, strategyId, awardId, endDateTime);
     }
 
     /**
@@ -123,5 +142,32 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
     @Override
     public List<StrategyAwardEntity> queryRaffleStrategyAwardList(Long strategyId) {
         return repository.queryStrategyAwardList(strategyId);
+    }
+
+    /**
+     * 根据活动ID查询抽奖奖品列表配置（实现 IRaffleAward 端口）
+     * <p>活动与策略 1:1 绑定，先按活动 ID 反查策略 ID，再查询该策略下的奖品列表。
+     *
+     * @param activityId 活动 ID
+     * @return 奖品实体列表
+     */
+    @Override
+    public List<StrategyAwardEntity> queryRaffleStrategyAwardListByActivityId(Long activityId) {
+        // 先按活动 ID 反查绑定的策略 ID
+        Long strategyId = repository.queryStrategyIdByActivityId(activityId);
+        // 再按策略 ID 查询奖品列表
+        return repository.queryStrategyAwardList(strategyId);
+    }
+
+    /**
+     * 查询奖品锁定规则（rule_lock）的解锁次数（实现 IRaffleRule 端口）
+     * <p>纯委托调用：透传给策略仓储层批量查询 rule_lock 节点的解锁次数配置。
+     *
+     * @param treeIds 规则树 ID 数组
+     * @return Map：key=规则树ID，value=解锁所需抽奖次数
+     */
+    @Override
+    public Map<String, Integer> queryAwardRuleLockCount(String[] treeIds) {
+        return repository.queryAwardRuleLockCount(treeIds);
     }
 }

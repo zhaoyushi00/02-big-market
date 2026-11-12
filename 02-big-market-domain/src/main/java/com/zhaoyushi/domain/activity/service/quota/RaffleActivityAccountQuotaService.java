@@ -131,4 +131,18 @@ public class RaffleActivityAccountQuotaService extends AbstractRaffleActivityAcc
         // 委托仓储清空数据库库存
         activityRepository.clearActivitySkuStock(sku);
     }
+
+    /**
+     * 查询用户今日已参与抽奖次数（领域服务实现）
+     * <p>纯委托调用：将查询请求透传给活动仓储层，由仓储层完成 PO 组装与 DAO 调用。
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 用户今日已参与抽奖次数
+     */
+    @Override
+    public Integer queryRaffleActivityAvvountDayPartakeCount(Long activityId, String userId) {
+        // 委托活动仓储查询今日已参与次数并直接返回
+        return activityRepository.queryRaffleActivityAvvountDayPartakeCount(activityId, userId);
+    }
 }

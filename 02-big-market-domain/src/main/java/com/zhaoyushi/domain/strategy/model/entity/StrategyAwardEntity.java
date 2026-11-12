@@ -35,5 +35,7 @@ public class StrategyAwardEntity {
     private BigDecimal awardRate;
     /*排序*/
     private Integer sort;
+    /*规则模型 - 该奖品配置的规则模型串（如 rule_lock,rule_luck_award），从 strategy_award 表 rule_models 字段同步而来，用于定位奖品绑定的规则树*/
+    private String ruleModels;
 
 }

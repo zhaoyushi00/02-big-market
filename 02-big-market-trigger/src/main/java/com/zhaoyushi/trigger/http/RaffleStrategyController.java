@@ -1,10 +1,12 @@
 package com.zhaoyushi.trigger.http;
 
 import com.alibaba.fastjson2.JSON;
+import com.zhaoyushi.domain.activity.service.IRaffleActivityAccountQuotaService;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleFactorEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.service.IRaffleAward;
+import com.zhaoyushi.domain.strategy.service.IRaffleRule;
 import com.zhaoyushi.domain.strategy.service.IRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyArmory;
 import com.zhaoyushi.trigger.api.IRaffleStrategyService;
@@ -17,10 +19,12 @@ import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 抽奖策略服务控制器
@@ -45,7 +49,7 @@ import java.util.List;
 // 定义该类所有接口的公共请求路径前缀，拼接后形如 /api/v1/raffle/strategy
 @RequestMapping("/api/${app.config.api-version}/raffle/strategy")
 // 实现策略维度抽奖服务接口 IRaffleStrategyService
-public class IRaffleStrategyController implements IRaffleStrategyService {
+public class RaffleStrategyController implements IRaffleStrategyService {
 
     // 注入策略装配服务，用于将抽奖策略数据装配到 Redis 缓存
     @Resource
@@ -58,6 +62,12 @@ public class IRaffleStrategyController implements IRaffleStrategyService {
     // 注入奖品服务，用于查询奖品配置列表
     @Resource
     private IRaffleAward raffleAward;
+    // 注入抽奖规则服务，用于查询奖品「抽奖 N 次后解锁」的规则配置
+    @Resource
+    private IRaffleRule raffleRule;
+    // 注入活动账户额度服务，用于查询用户今日已参与抽奖次数（判断奖品是否达到解锁门槛）
+    @Resource
+    private IRaffleActivityAccountQuotaService raffleActivityAccountQuotaService;
 
     // 定义 GET 请求路径 strategy_armory，用于装配抽奖策略
     @RequestMapping(value = "strategy_armory", method = RequestMethod.GET)
@@ -111,13 +121,42 @@ public class IRaffleStrategyController implements IRaffleStrategyService {
     public Response<List<RaffleAwardListResponseDTO>> queryRaffleAwardList(@RequestBody RaffleAwardListRequestDTO requestDTO) {
         try {
             // 记录查询奖品列表开始的日志，包含策略ID
-            log.info("查询抽奖奖品列表配开始 strategyId：{}", requestDTO.getStrategyId());
-            // 查询奖品配置，根据策略ID获取奖品实体列表
-            List<StrategyAwardEntity> strategyAwardEntities = raffleAward.queryRaffleStrategyAwardList(requestDTO.getStrategyId());
+            log.info("查询抽奖奖品列表配开始 userId:{} activityId:{}", requestDTO.getUserId(), requestDTO.getActivityId());
+
+            // 1、参数校验
+            if (StringUtils.isBlank(requestDTO.getUserId()) || requestDTO.getActivityId() == null) {
+                // 构建查询失败的响应体
+                return Response.<List<RaffleAwardListResponseDTO>>builder()
+                        // 设置响应码为非法参数错误
+                        .code(ResponseCode.ILLEGAL_PARAMETER.getCode())
+                        // 设置响应信息为非法参数错误
+                        .info(ResponseCode.ILLEGAL_PARAMETER.getInfo())
+                        // 构建响应对象
+                        .build();
+            }
+
+            // 2、查询奖品配置，根据活动ID（内部反查策略ID）获取奖品实体列表
+            List<StrategyAwardEntity> strategyAwardEntities = raffleAward.queryRaffleStrategyAwardListByActivityId(requestDTO.getActivityId());
+            // 3、规则配置：从奖品实体的 ruleModels 中提取规则树 ID 数组
+            String[] treeIds = strategyAwardEntities.stream()
+                    // 把流里每一个 StrategyAwardEntity 对象，转换成它的 ruleModels 字段
+                    .map(StrategyAwardEntity::getRuleModels)
+//                    .map(strategyAward -> strategyAward.getRuleModels())
+                    // 过滤掉未配置规则模型的奖品（ruleModels 为 null 或空串）
+                    .filter(ruleModel -> ruleModel != null && !ruleModel.isEmpty())
+                    // String[]::new 不是 Lambda 表达式，而是构造器引用（Constructor Reference），它是 Stream.toArray 方法的一个参数
+                    .toArray(String[]::new);
+            // 4、查询规则配置 - 获取奖品的解锁限制，抽奖n次后解锁（返回 treeId → 解锁次数 的映射）
+            Map<String, Integer> ruleLockCountMap = raffleRule.queryAwardRuleLockCount(treeIds);
+            // 5、查询抽奖次数 - 用户已经参加与的抽奖次数（用于判断是否达到解锁门槛）
+            Integer dayPartakeCount = raffleActivityAccountQuotaService.queryRaffleActivityAvvountDayPartakeCount(requestDTO.getActivityId(), requestDTO.getUserId());
+            // 6、遍历填充数据
             // 初始化奖品列表响应集合，容量与奖品实体数量一致
             List<RaffleAwardListResponseDTO> raffleAwardListResponseDTOS = new ArrayList<>(strategyAwardEntities.size());
             // 遍历奖品实体，逐一转换为响应 DTO
             for (StrategyAwardEntity strategyAward : strategyAwardEntities) {
+                // 取出当前奖品绑定的规则树对应的解锁次数；未配置锁定规则时为 null
+                Integer awardRuleLockCount = ruleLockCountMap.get(strategyAward.getRuleModels());
                 // 将奖品实体转换为响应 DTO 并添加到集合中
                 raffleAwardListResponseDTOS.add(RaffleAwardListResponseDTO.builder()
                         // 设置奖品ID
@@ -128,6 +167,12 @@ public class IRaffleStrategyController implements IRaffleStrategyService {
                         .awardSubtitle(strategyAward.getAwardSubtitle())
                         // 设置奖品排序，转换为字符串
                         .sort(String.valueOf(strategyAward.getSort()))
+                        // 设置解锁规则次数（抽奖 N 次后解锁的 N 值，未配置则为 null）
+                        .awardRuleLockCount(awardRuleLockCount)
+                        // 设置解锁状态：未配置锁定规则 或 用户已抽次数超过解锁阈值 → 已解锁
+                        .isAwardUnlock(awardRuleLockCount == null || dayPartakeCount > awardRuleLockCount)
+                        // 设置还需等待的次数：解锁阈值 - 已抽次数；已解锁或未配置规则时为 0
+                        .waitUnlockCount(awardRuleLockCount == null || awardRuleLockCount <= dayPartakeCount ? 0 : awardRuleLockCount - dayPartakeCount)
                         // 构建响应 DTO 对象
                         .build());
             }
@@ -142,12 +187,12 @@ public class IRaffleStrategyController implements IRaffleStrategyService {
                     // 构建响应对象
                     .build();
             // 记录查询奖品列表完成的日志，包含响应内容
-            log.info("查询抽奖奖品列表配置完成 strategyId：{} response: {}", requestDTO.getStrategyId(), com.alibaba.fastjson.JSON.toJSONString(response));
+            log.info("查询抽奖奖品列表配置完成userId:{} activityId:{}  response:{}", requestDTO.getUserId(), requestDTO.getActivityId(), com.alibaba.fastjson.JSON.toJSONString(response));
             // 返回奖品列表查询结果
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             // 记录查询奖品列表失败的日志，包含策略ID和异常堆栈
-            log.error("查询抽奖奖品列表配置失败 strategyId：{}", requestDTO.getStrategyId(), e);
+            log.error("查询抽奖奖品列表配置失败 userId:{} activityId:{}",  requestDTO.getUserId(), requestDTO.getActivityId(), e);
             // 构建查询失败的响应体
             return Response.<List<RaffleAwardListResponseDTO>>builder()
                     // 设置响应码为未知错误

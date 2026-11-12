@@ -2,6 +2,7 @@ package com.zhaoyushi.infrastructure.persistent.dao;
 
 import com.zhaoyushi.infrastructure.persistent.po.RuleTreeNode;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -25,4 +26,11 @@ public interface IRuleTreeNodeDao {
      */
     List<RuleTreeNode> queryRuleTreeNodeListByTreeId(String treeId);
 
+    /**
+     * 批量查询多个规则树中锁定规则（rule_lock）节点的解锁次数
+     *
+     * @param treeIds 规则树ID数组，如 {"tree_lock_1", "tree_lock_2"}
+     * @return 规则树节点列表；仅 treeId 与 ruleValue 字段有值，其余字段为 null
+     */
+    List<RuleTreeNode> queryRuleLocks(@Param("treeIds") String[] treeIds);
 }

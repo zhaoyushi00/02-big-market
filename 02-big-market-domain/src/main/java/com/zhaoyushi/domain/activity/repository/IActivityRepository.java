@@ -169,4 +169,15 @@ public interface IActivityRepository {
      * @return 活动 SKU 实体列表
      */
     List<ActivitySkuEntity> queryActivitySkuListByActivityId(Long activityId);
+
+    /**
+     * 查询用户今日已参与抽奖次数
+     * <p>按「用户 + 活动 + 当天日期」查询日账户记录，用「日总次数 - 日剩余次数」得到已使用额度，
+     * 供奖品解锁状态判断（是否达到「抽奖 N 次解锁」门槛）使用。
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 用户今日已参与抽奖次数，无记录时返回 0
+     */
+    Integer queryRaffleActivityAvvountDayPartakeCount(Long activityId, String userId);
 }

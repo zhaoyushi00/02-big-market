@@ -8,8 +8,10 @@ import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 策略仓储接口（领域层仓储端口）
@@ -158,6 +160,17 @@ public interface IStrategyRepository {
     Boolean subtractionAwardStock(String cacheKay);
 
     /**
+     * 扣减奖品库存（带活动结束时间）
+     * <p>与 {@link #subtractionAwardStock(String)} 逻辑一致，区别在于扣减成功后抢占的「锁 Key」会
+     * 带上过期时间：过期时间 = 活动结束时间 + 1 天，避免锁 Key 在活动结束后仍永久驻留 Redis。
+     *
+     * @param cacheKay     库存缓存 Key
+     * @param endDateTime  活动结束时间，用于计算锁 Key 的过期时间；为 null 时锁 Key 不设置过期
+     * @return 扣减成功返回 true；库存不足（扣减后为负数）返回 false
+     */
+    Boolean subtractionAwardStock(String cacheKay, Date endDateTime);
+
+    /**
      * 写入奖品库存消费队列
      *
      * @param strategyAwardStockKeyVO 对象值对象
@@ -205,4 +218,14 @@ public interface IStrategyRepository {
      * @return 用户今日参与次数
      */
     Integer queryTodayUserRaffleCount(String userId, Long strategyId);
+
+    /**
+     * 查询奖品锁定规则（rule_lock）的解锁次数
+     * <p>批量查询多个规则树中 rule_lock 节点的 rule_value（即「抽奖 N 次后解锁」的 N 值），
+     * 以 treeId 为 key、N 值为 value 组装成 Map，供奖品列表展示解锁状态使用。
+     *
+     * @param treeIds 规则树 ID 数组
+     * @return Map：key=规则树ID(treeId)，value=解锁所需抽奖次数(N)
+     */
+    Map<String, Integer> queryAwardRuleLockCount(String[] treeIds);
 }

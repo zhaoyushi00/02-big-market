@@ -9,6 +9,7 @@ import com.zhaoyushi.domain.strategy.service.rule.tree.factory.DefaultTreeFactor
 import com.zhaoyushi.domain.strategy.service.rule.tree.factory.engine.IDecisionTreeEngine;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -50,13 +51,14 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
      * <p>从根节点开始，循环执行「取节点 → 执行 logic() → 记录结果 → 匹配连线找下一节点」，
      * 直到 nextNode 为 null（到达叶子节点）时结束，返回最终奖品数据。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    候选奖品ID
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     候选奖品ID
+     * @param endDateTime 活动结束时间，透传给各节点的 logic()，库存扣减节点用其给锁 Key 设过期时间
      * @return 最终奖品数据，若整棵树无节点接管则为 null
      */
     @Override
-    public DefaultTreeFactory.StrategyAwardVO process(String userId, Long strategyId, Integer awardId) {
+    public DefaultTreeFactory.StrategyAwardVO process(String userId, Long strategyId, Integer awardId, Date endDateTime) {
 
         // 最终奖品数据，随遍历被叶子节点覆盖
         DefaultTreeFactory.StrategyAwardVO strategyAwardData = null;
@@ -74,8 +76,8 @@ public class DecisionTreeEngine implements IDecisionTreeEngine {
             ILogicTreeNode logicTreeNode = logicTreeNodeGroup.get(ruleTreeNode.getRuleKey());
             String ruleValue = ruleTreeNode.getRuleValue();
 
-            // 4. 执行节点判断逻辑，得到判定结果与奖品数据
-            DefaultTreeFactory.TreeActionEntity logicEntity = logicTreeNode.logic(userId, strategyId, awardId, ruleValue);
+            // 4. 执行节点判断逻辑，得到判定结果与奖品数据（活动结束时间一并透传，供库存节点设置锁 Key 过期时间）
+            DefaultTreeFactory.TreeActionEntity logicEntity = logicTreeNode.logic(userId, strategyId, awardId, ruleValue, endDateTime);
             RuleLogicCheckTypeVO ruleLogicCheckTypeVO = logicEntity.getRuleLogicCheckTypeVO();
             strategyAwardData = logicEntity.getStrategyAwardVO();
             log.info("决策树引擎【{}】treeId:{} node:{} code:{}", ruleTreeVO.getTreeName(), ruleTreeVO.getTreeId(), nextNode, ruleLogicCheckTypeVO.getCode());

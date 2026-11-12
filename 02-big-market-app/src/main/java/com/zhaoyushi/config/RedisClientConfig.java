@@ -11,6 +11,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.BaseCodec;
 import org.redisson.client.protocol.Decoder;
 import org.redisson.client.protocol.Encoder;
+import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.config.Config;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -39,12 +40,15 @@ public class RedisClientConfig {
     @Bean("redissonClient")
     public RedissonClient redissonClient(ConfigurableApplicationContext applicationContext, RedisClientConfigProperties properties) {
         Config config = new Config();
-        // 根据需要可以设定编解码器；https://github.com/redisson/redisson/wiki/4.-%E6%95%B0%E6%8D%AE%E5%BA%8F%E5%88%97%E5%8C%96
-        // config.setCodec(new RedisCodec());
+        // 设定全局编解码器：改用 Redisson 内置的 JsonJacksonCodec（基于 Jackson）
+        // 好处：对 Map/List/实体等复杂类型可自动序列化为 JSON，且解码时能正确还原泛型类型，
+        // 避免了原先自定义 RedisCodec 反序列化出的对象被解析成 LinkedHashMap 导致强转失败的问题
+        config.setCodec(JsonJacksonCodec.INSTANCE);
 
         config.useSingleServer()
                 .setAddress("redis://" + properties.getHost() + ":" + properties.getPort())
-//                .setPassword(properties.getPassword())
+                // 设置 Redis 连接密码：由配置文件读取（原为注释掉状态，现启用，用于带密码鉴权的 Redis 实例）
+                .setPassword(properties.getPassword())
                 .setConnectionPoolSize(properties.getPoolSize())
                 .setConnectionMinimumIdleSize(properties.getMinIdleSize())
                 .setIdleConnectionTimeout(properties.getIdleTimeout())

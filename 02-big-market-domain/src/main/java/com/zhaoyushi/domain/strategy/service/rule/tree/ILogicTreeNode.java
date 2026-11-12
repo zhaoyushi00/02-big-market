@@ -2,6 +2,8 @@ package com.zhaoyushi.domain.strategy.service.rule.tree;
 
 import com.zhaoyushi.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
 
+import java.util.Date;
+
 /**
  * @author zhaoy
  * @date 2026/9/30
@@ -33,11 +35,13 @@ public interface ILogicTreeNode {
      * 若为接管节点（如兜底奖励）还需返回最终奖品数据 strategyAwardData。
      * 返回的 TreeActionEntity 封装了判断结果 ruleLogicCheckTypeVO 和奖品数据 strategyAwardData。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    候选奖品ID
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     候选奖品ID
+     * @param ruleValue   节点规则值（节点在规则树中配置的判定阈值/兜底奖品等）
+     * @param endDateTime 活动结束时间，库存扣减节点用于给锁 Key 设置过期时间
      * @return 节点判定结果与奖品数据封装
      */
-    DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue);
+    DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime);
 
 }

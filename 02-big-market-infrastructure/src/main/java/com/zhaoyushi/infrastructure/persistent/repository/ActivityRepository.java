@@ -667,4 +667,29 @@ public class ActivityRepository implements IActivityRepository {
         // 返回活动 SKU 领域实体列表
         return activitySkuEntities;
     }
+
+    /**
+     * 查询用户今日已参与抽奖次数
+     * <p>组装日账户查询 PO（用户 + 活动 + 当天日期），委托 DAO 直接查出「已使用次数
+     * （日总次数 - 日剩余次数）」；DAO 返回 null（无记录）时兜底为 0，避免上层空指针。
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 用户今日已参与抽奖次数
+     */
+    @Override
+    public Integer queryRaffleActivityAvvountDayPartakeCount(Long activityId, String userId) {
+        // 组装日账户查询参数对象（PO）
+        RaffleActivityAccountDay raffleActivityAccountDay = new RaffleActivityAccountDay();
+        // 设置活动 ID
+        raffleActivityAccountDay.setActivityId(activityId);
+        // 设置用户 ID
+        raffleActivityAccountDay.setUserId(userId);
+        // 设置查询日期为当天（yyyy-MM-dd），复用 PO 自带的 currentDay() 生成
+        raffleActivityAccountDay.setDay(raffleActivityAccountDay.currentDay());
+        // 委托 DAO 查询「日总次数 - 日剩余次数」，得到今日已参与次数
+        Integer dayPartakeCount = raffleActivityAccountDayDao.queryRaffleActivityAvvountDayPartakeCount(raffleActivityAccountDay);
+        // 兜底判空：用户今日无参与记录时 DAO 返回 null，统一转为 0 返回
+        return dayPartakeCount == null ? 0 : dayPartakeCount;
+    }
 }

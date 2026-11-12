@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 // 引入 @Component 注解，将本节点注册为 Spring Bean
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 /**
  * @author zhaoy
  * @date 2026/9/30
@@ -41,14 +43,15 @@ public class RuleLockLogicTreeNode implements ILogicTreeNode {
      * 执行次数锁规则判断
      * <p>解析规则配置的限定抽奖次数，与用户今日已抽奖次数比较，返回放行或拦截。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    候选奖品ID
-     * @param ruleValue  规则配置值（限定抽奖次数）
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     候选奖品ID
+     * @param ruleValue   规则配置值（限定抽奖次数）
+     * @param endDateTime 活动结束时间（本节点不直接使用，仅为接口统一签名透传）
      * @return 放行（ALLOW）或拦截（TAKE_OVER）的节点判定结果
      */
     @Override
-    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime) {
 
         // 记录次数锁规则开始执行的日志
         log.info("规则过滤-次数锁 userId:{} strategyId:{} awardId:{}",userId, strategyId, awardId);

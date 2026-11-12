@@ -63,6 +63,8 @@ public class RaffleActivityPartakeService extends AbstractRaffleActivityPartake{
         userRaffleOrder.setOrderTime(currentDate);
         // 订单初始状态：create（创建、未使用）
         userRaffleOrder.setOrderState(UserRaffleOrderStateVO.create);
+        // 冗余活动结束时间到订单：后续抽奖时透传到库存扣减链路，作为锁 Key 的过期时间基准
+        userRaffleOrder.setEndDateTime(activityEntity.getEndDateTime());
         return userRaffleOrder;
     }
 

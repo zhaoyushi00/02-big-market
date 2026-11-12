@@ -19,10 +19,7 @@ import org.redisson.api.RMap;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.zhaoyushi.types.enums.ResponseCode.UN_ASSEMBLED_STRATEGY_ARMORY;
@@ -94,6 +91,8 @@ public class StrategyRepository implements IStrategyRepository {
                         .awardSubtitle(strategyAward.getAwardSubtitle())
                         .awardTitle(strategyAward.getAwardTitle())
                         .sort(strategyAward.getSort())
+                        // 拷贝规则模型串（rule_models）：用于后续奖品列表查询时定位其绑定的规则树
+                        .ruleModels(strategyAward.getRuleModels())
                         .build();
             strategyAwardEntities.add(strategyAwardEntity);
         }
@@ -370,6 +369,20 @@ public class StrategyRepository implements IStrategyRepository {
      */
     @Override
     public Boolean subtractionAwardStock(String cacheKay) {
+        return subtractionAwardStock(cacheKay, null);
+    }
+
+    /**
+     * 扣减奖品库存（带活动结束时间）
+     * <p>与无参重载逻辑一致，额外支持传入活动结束时间：当 endDateTime 非空时，为抢占的
+     * 锁 Key 设置过期时间（活动结束时间 + 1 天），保证活动结束后锁 Key 能被自动回收。
+     *
+     * @param cacheKay    库存缓存 Key
+     * @param endDateTime 活动结束时间，可为 null（null 时锁 Key 不设置过期时间）
+     * @return 扣减且加锁成功返回 true；库存不足或加锁失败返回 false
+     */
+    @Override
+    public Boolean subtractionAwardStock(String cacheKay, Date endDateTime) {
         // decr 原子扣减库存，并返回扣减后的剩余量
         long surplus = redisService.decr(cacheKay);
         // 剩余量为负数说明库存已耗尽
@@ -381,12 +394,24 @@ public class StrategyRepository implements IStrategyRepository {
         }
         // 拼接锁 Key：库存Key_剩余量，用于后续业务唯一性校验
         String lockKey = cacheKay + Constants.UNDERLINE + surplus;
-        // 通过 setNx 抢占锁 Key，抢占成功表示本次扣减有效
-        // 将 key 的值设为 value，当且仅当 key 不存在。
-        // 若给定的 key 已经存在，则 SETNX 不做任何动作。
-        // setNx 返回 false 只会在同一个 lockKey 被第二次 setNx 时发生，也就是"同一个剩余量被处理了两次"
-        // 就是代替了数据库判空的功能，不用多次查询数据库了
-        Boolean lock = redisService.setNx(lockKey);
+
+        // 锁抢占结果，默认失败
+        Boolean lock = false;
+
+        // 若传入了活动结束时间，则为锁 Key 设置过期时间，避免其永久驻留 Redis
+        if (null != endDateTime){
+            // 计算过期时长：从「当前时刻」到「活动结束时刻」再加 1 天缓冲
+            long expireMillis = endDateTime.getTime() - System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1);
+            // 带过期时间的 setNx：key 不存在时设置值并指定过期时长，key 已存在则不做任何动作
+            lock = redisService.setNx(lockKey, expireMillis, TimeUnit.MILLISECONDS);
+        }else {
+            // 通过 setNx 抢占锁 Key，抢占成功表示本次扣减有效
+            // 将 key 的值设为 value，当且仅当 key 不存在。
+            // 若给定的 key 已经存在，则 SETNX 不做任何动作。
+            // setNx 返回 false 只会在同一个 lockKey 被第二次 setNx 时发生，也就是"同一个剩余量被处理了两次"
+            // 就是代替了数据库判空的功能，不用多次查询数据库了
+            lock = redisService.setNx(lockKey);
+        }
         // 抢占失败时记录日志，便于排查
         if(!lock){
             log.info("策略奖品库存加锁失败{}", lockKey);
@@ -522,6 +547,33 @@ public class StrategyRepository implements IStrategyRepository {
         if (null == raffleActivityAccountDay) return 0;
         // 总次数 - 剩余的，等于今日参与的
         return raffleActivityAccountDay.getDayCount() - raffleActivityAccountDay.getDayCountSurplus();
+    }
+
+    /**
+     * 查询奖品锁定规则（rule_lock）的解锁次数
+     * <p>批量查询多个规则树中 rule_lock 节点的 rule_value，组装成 treeId → 解锁次数 的映射。
+     * 用于奖品列表接口判断每个奖品的「抽奖 N 次后解锁」门槛。
+     *
+     * @param treeIds 规则树 ID 数组，为空时直接返回空 Map
+     * @return Map：key=规则树ID，value=解锁所需抽奖次数
+     */
+    @Override
+    public Map<String, Integer> queryAwardRuleLockCount(String[] treeIds) {
+        // 防御性判空：入参数组为空时直接返回空 Map，避免后续 DAO 层拼装空 in 条件报错
+        if(null == treeIds || treeIds.length == 0) return new HashMap<>();
+        // 批量查询多个规则树中的 rule_lock 节点（只取 tree_id 与 rule_value 两列）
+        List<RuleTreeNode> ruleTreeNodes = ruleTreeNodeDao.queryRuleLocks(treeIds);
+        // 组装返回 Map：key=规则树ID，value=解锁次数
+        Map<String, Integer> map = new HashMap<>();
+        for (RuleTreeNode node : ruleTreeNodes){
+            // 取规则树 ID 作为 Map 的 key
+            String treeId = node.getTreeId();
+            // 将 rule_value（如 "5"）解析为整数，作为解锁所需抽奖次数
+            Integer ruleValue = Integer.valueOf(node.getRuleValue());
+            // 放入结果 Map
+            map.put(treeId, ruleValue);
+        }
+        return map;
     }
 
 }

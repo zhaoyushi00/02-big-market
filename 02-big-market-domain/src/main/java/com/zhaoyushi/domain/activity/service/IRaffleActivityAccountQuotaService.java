@@ -26,4 +26,14 @@ public interface IRaffleActivityAccountQuotaService {
      */
     String createSkuRechargeOrder(SkuRechargeEntity skuRechargeEntity);
 
+    /**
+     * 查询用户今日已参与抽奖次数
+     * <p>按「用户 + 活动 + 当天日期」统计该用户今日已使用的抽奖额度，
+     * 供奖品列表接口判断奖品解锁状态（是否达到「抽奖 N 次解锁」门槛）。
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 用户今日已参与抽奖次数
+     */
+    Integer queryRaffleActivityAvvountDayPartakeCount(Long activityId, String userId);
 }

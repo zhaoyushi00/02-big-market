@@ -1,4 +1,5 @@
 package com.zhaoyushi.trigger.http;
+
 import com.zhaoyushi.domain.activity.model.entity.UserRaffleOrderEntity;
 import com.zhaoyushi.domain.activity.service.IRaffleActivityPartakeService;
 import com.zhaoyushi.domain.activity.service.armory.IActivityArmory;
@@ -19,6 +20,7 @@ import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Date;
 
 /**
@@ -66,9 +68,9 @@ public class RaffleActivityController implements IRaffleActivityService {
      * <p>
      * 接口：<a href="http://localhost:8091/api/v1/raffle/activity/armory">/api/v1/raffle/activity/armory</a>
      * 入参：{"activityId":100001,"userId":"xiaofuge"}
-     *
+     * <p>
      * curl --request GET \
-     *   --url 'http://localhost:8091/api/v1/raffle/activity/armory?activityId=100301'
+     * --url 'http://localhost:8091/api/v1/raffle/activity/armory?activityId=100301'
      */
     // 定义 GET 请求路径 armory，用于活动装配
     @RequestMapping(value = "armory", method = RequestMethod.GET)
@@ -96,7 +98,7 @@ public class RaffleActivityController implements IRaffleActivityService {
             log.info("活动装配 数据预热 完成 activityId:{}", activityId);
             // 返回装配结果
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
             // 记录活动装配失败的日志，包含活动ID和异常堆栈
             log.error("活动装配，数据预热，失败activity:{}", activityId, e);
             // 构建装配失败的响应体
@@ -118,13 +120,13 @@ public class RaffleActivityController implements IRaffleActivityService {
      * <p>
      * 接口：<a href="http://localhost:8091/api/v1/raffle/activity/draw">/api/v1/raffle/activity/draw</a>
      * 入参：{"activityId":100001,"userId":"xiaofuge"}
-     *
+     * <p>
      * curl --request POST \
-     *   --url http://localhost:8091/api/v1/raffle/activity/draw \
-     *   --header 'content-type: application/json' \
-     *   --data '{
-     *     "userId":"xiaofuge",
-     *     "activityId": 100301
+     * --url http://localhost:8091/api/v1/raffle/activity/draw \
+     * --header 'content-type: application/json' \
+     * --data '{
+     * "userId":"xiaofuge",
+     * "activityId": 100301
      * }'
      */
     // 定义 POST 请求路径 draw，用于活动抽奖
@@ -152,6 +154,8 @@ public class RaffleActivityController implements IRaffleActivityService {
                     .userId(orderEntity.getUserId())
                     // 设置抽奖因子中的策略ID（取自订单）
                     .strategyId(orderEntity.getStrategyId())
+                    // 设置抽奖因子中的活动结束时间（取自订单，透传到库存扣减链路给锁 Key 设过期时间）
+                    .endDateTime(orderEntity.getEndDateTime())
                     // 构建抽奖因子实体
                     .build());
             // 4、存放结果 - 写入中奖记录：组装用户中奖记录实体
@@ -194,7 +198,7 @@ public class RaffleActivityController implements IRaffleActivityService {
                             .build())
                     // 构建响应对象
                     .build();
-        }catch (AppException e){
+        } catch (AppException e) {
             // 记录业务异常日志，包含用户ID、活动ID和异常堆栈
             log.error("活动抽奖失败 userId:{} activityId:{}", request.getUserId(), request.getActivityId(), e);
             // 构建业务异常的响应体
@@ -205,7 +209,7 @@ public class RaffleActivityController implements IRaffleActivityService {
                     .info(e.getInfo())
                     // 构建响应对象（data 为空）
                     .build();
-        }catch (Exception e) {
+        } catch (Exception e) {
             // 记录系统异常日志，包含用户ID、活动ID和异常堆栈
             log.error("活动抽奖失败 userId:{} activityId:{}", request.getUserId(), request.getActivityId(), e);
             // 构建系统异常的响应体

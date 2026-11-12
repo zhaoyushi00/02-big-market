@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -26,5 +28,7 @@ public class RaffleAwardEntity {
     private String awardConfig;
     /** 奖品顺序号 */
     private Integer sort;
+    /** 活动结束时间：随抽奖结果一起带回，用于给「库存扣减锁 Key」设置过期时间，避免锁 Key 在活动结束后仍永久驻留 Redis */
+    private Date endDateTime;
 
 }

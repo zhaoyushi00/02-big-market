@@ -199,16 +199,18 @@ public class StrategyArmoryDispatch implements IStrategyArmory, IStrategyDispatc
     /**
      * 扣减奖品缓存库存
      * <p>根据策略ID和奖品ID拼接库存缓存 Key，委托仓储层对 Redis 中的奖品库存执行原子扣减。
+     * 额外传入活动结束时间，用于给扣减后抢占的锁 Key 设置过期时间。
      *
-     * @param strategyId 策略ID
-     * @param awardId    奖品ID
+     * @param strategyId  策略ID
+     * @param awardId     奖品ID
+     * @param endDateTime 活动结束时间，可为 null（null 时锁 Key 不设过期时间）
      * @return 扣减成功返回 true；库存不足返回 false
      */
     @Override
-    public Boolean subtractionAwardStock(Long strategyId, Integer awardId) {
+    public Boolean subtractionAwardStock(Long strategyId, Integer awardId, Date endDateTime) {
         // 拼接库存缓存 Key：strategy_award_count_key_策略ID_奖品ID
         String cacheKay = Constants.RedisKey.STRATEGY_AWARD_COUNT_KEY + strategyId + Constants.UNDERLINE + awardId;
-        // 委托仓储层扣减库存，并返回扣减结果
-        return repository.subtractionAwardStock(cacheKay);
+        // 委托仓储层扣减库存，并把活动结束时间一并透传，用于给锁 Key 设置过期时间
+        return repository.subtractionAwardStock(cacheKay, endDateTime);
     }
 }

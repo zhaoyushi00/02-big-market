@@ -17,5 +17,16 @@
         from big_market.rule_tree_node
         where tree_id = #{treeId}
     </select>
+    <!-- 批量查询多个规则树中「锁定规则（rule_lock）」节点的解锁次数配置 -->
+    <!-- 用途：前端展示奖品列表时，需要拿到每个规则树对应的「抽奖 N 次后解锁」的 N 值 -->
+    <select id="queryRuleLocks" resultMap="dataMap">
+        select tree_id, rule_value
+        from rule_tree_node
+        where rule_key = 'rule_lock' and tree_id in
+        <!-- foreach 将 treeIds 数组展开为 in (id1, id2, ...) 形式，open/close 拼接括号，separator 用逗号分隔 -->
+        <foreach collection="treeIds" item="treeId" open="(" separator="," close=")">
+            #{treeId}
+        </foreach>
+    </select>
 
 </mapper>

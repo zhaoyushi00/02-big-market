@@ -7,6 +7,8 @@ import com.zhaoyushi.types.common.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
 /**
  * @author zhaoy
  * @date 2026/9/30
@@ -23,15 +25,18 @@ public class RuleLuckAwardLogicTreeNode implements ILogicTreeNode {
 
     /**
      * 执行兜底奖励逻辑
-     * <p>当前占位实现：固定返回接管（TAKE_OVER），并携带兜底奖品数据（awardId=101，规则值 "1,100"）。
+     * <p>解析规则值得到兜底奖品（冒号前为兜底奖品ID，冒号后为奖品规则值），
+     * 返回接管（TAKE_OVER）并携带兜底奖品数据，保证抽奖流程一定返回奖品。
      *
-     * @param userId     用户ID
-     * @param strategyId 策略ID
-     * @param awardId    候选奖品ID
+     * @param userId      用户ID
+     * @param strategyId  策略ID
+     * @param awardId     候选奖品ID
+     * @param ruleValue   规则配置值（兜底奖品配置，如 "101:1,100"）
+     * @param endDateTime 活动结束时间（本节点不直接使用，仅为接口统一签名透传）
      * @return 携带兜底奖品的节点判定结果
      */
     @Override
-    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue) {
+    public DefaultTreeFactory.TreeActionEntity logic(String userId, Long strategyId, Integer awardId, String ruleValue, Date endDateTime) {
         log.info("规则过滤-兜底奖品 userId:{} strategyId:{} awardId:{} ruleValue:{}", userId, strategyId, awardId, ruleValue);
         String[] split = ruleValue.split(Constants.COLON);
         if (split.length == 0) {

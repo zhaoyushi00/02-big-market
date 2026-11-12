@@ -36,4 +36,15 @@ public interface IRaffleActivityAccountDayDao {
      */
     @DBRouter
     RaffleActivityAccountDay queryActivityAccountDayByUserId(RaffleActivityAccountDay raffleActivityAccountDayReq);
+
+    /**
+     * 查询用户今日已参与抽奖次数（带分库分表路由）
+     * <p>按「用户 + 活动 + 当天日期」直接查出「日总次数 - 日剩余次数」的差值，
+     * 即该用户今日已使用的抽奖额度；无记录时返回 null。
+     *
+     * @param raffleActivityAccountDay 查询条件（userId + activityId + day）
+     * @return 今日已参与次数（day_count - day_count_surplus），无记录时返回 null
+     */
+    @DBRouter
+    Integer queryRaffleActivityAvvountDayPartakeCount(RaffleActivityAccountDay raffleActivityAccountDay);
 }

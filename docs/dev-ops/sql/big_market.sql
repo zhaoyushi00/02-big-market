@@ -76,7 +76,6 @@ CREATE TABLE `raffle_activity` (
   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_activity_id` (`activity_id`),
-  -- 新增：策略 ID 唯一索引，保证活动与策略 1:1 绑定（供「按活动装配策略」反查使用）
   UNIQUE KEY `uq_strategy_id` (`strategy_id`),
   KEY `idx_begin_date_time` (`begin_date_time`),
   KEY `idx_end_date_time` (`end_date_time`)
