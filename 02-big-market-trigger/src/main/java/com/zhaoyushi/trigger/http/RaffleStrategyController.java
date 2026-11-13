@@ -169,8 +169,8 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                         .sort(String.valueOf(strategyAward.getSort()))
                         // 设置解锁规则次数（抽奖 N 次后解锁的 N 值，未配置则为 null）
                         .awardRuleLockCount(awardRuleLockCount)
-                        // 设置解锁状态：未配置锁定规则 或 用户已抽次数超过解锁阈值 → 已解锁
-                        .isAwardUnlock(awardRuleLockCount == null || dayPartakeCount > awardRuleLockCount)
+                        // 设置解锁状态：未配置锁定规则 或 用户已抽次数达到解锁阈值（>=）→ 已解锁，与规则引擎 rule_lock 的判定口径保持一致
+                        .isAwardUnlock(awardRuleLockCount == null || dayPartakeCount >= awardRuleLockCount)
                         // 设置还需等待的次数：解锁阈值 - 已抽次数；已解锁或未配置规则时为 0
                         .waitUnlockCount(awardRuleLockCount == null || awardRuleLockCount <= dayPartakeCount ? 0 : awardRuleLockCount - dayPartakeCount)
                         // 构建响应 DTO 对象

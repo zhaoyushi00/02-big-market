@@ -42,6 +42,7 @@ public class AppException extends RuntimeException {
      * @param message 提示信息
      */
     public AppException(String code, String message) {
+        super(message);
         this.code = code;
         this.info = message;
     }
@@ -54,9 +55,9 @@ public class AppException extends RuntimeException {
      * @param cause   原始异常
      */
     public AppException(String code, String message, Throwable cause) {
+        super(message, cause);
         this.code = code;
         this.info = message;
-        super.initCause(cause);
     }
 
     @Override

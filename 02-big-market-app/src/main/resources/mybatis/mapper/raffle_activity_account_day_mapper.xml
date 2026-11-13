@@ -34,8 +34,8 @@
         where user_id = #{userId} and activity_id = #{activityId} and day = #{day}
     </select>
     <!-- 查询用户今日已参与抽奖次数：用「日总次数 - 日剩余次数」得到已使用额度 -->
-    <!-- 说明：resultType 声明返回标量 Integer；同时保留 resultMap 是历史遗留写法，二者不应并存，建议仅保留 resultType -->
-    <select id="queryRaffleActivityAvvountDayPartakeCount" resultType="java.lang.Integer" resultMap="dataMap">
+    <!-- 说明：resultType 声明返回标量 Integer，MyBatis 会把单列结果直接映射为 Integer 返回；此处不能同时保留 resultMap，否则 resultMap 优先生效，导致返回 POJO 而非整数 -->
+    <select id="queryRaffleActivityAvvountDayPartakeCount" resultType="java.lang.Integer">
         select day_count - day_count_surplus
         from raffle_activity_account_day
         where user_id = #{userId} and activity_id = #{activityId} and day = #{day}
