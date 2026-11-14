@@ -9,6 +9,8 @@ import lombok.Data;
 // 引入 @NoArgsConstructor，生成无参构造器
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 活动抽奖响应对象
  * <p>作为活动抽奖接口（draw）的出参 DTO，封装中奖奖品的核心信息返回给调用方。
@@ -25,7 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 // 生成无参构造器
 @NoArgsConstructor
-public class ActivityDrawResponseDTO {
+public class ActivityDrawResponseDTO implements Serializable {
     // 奖品ID：中奖奖品的唯一标识
     private Integer awardId;
     // 奖品标题：中奖奖品的名称/描述

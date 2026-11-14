@@ -9,6 +9,8 @@ import lombok.Data;
 // 引入 @NoArgsConstructor，生成无参构造器
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 抽奖策略请求参数
  * <p>由原抽奖请求参数（RaffleRequestDTO）重命名而来，作为策略维度随机抽奖接口的入参。
@@ -25,7 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 // 支持使用构建者模式创建本对象
 @Builder
-public class RaffleStrategyRequestDTO {
+public class RaffleStrategyRequestDTO implements Serializable {
     /** 策略ID：唯一标识一套抽奖策略 */
     private Long strategyId;
 }

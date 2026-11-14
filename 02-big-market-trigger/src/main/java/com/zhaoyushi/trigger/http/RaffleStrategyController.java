@@ -20,6 +20,7 @@ import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import java.util.Map;
 @CrossOrigin("${app.config.cross-origin}")
 // 定义该类所有接口的公共请求路径前缀，拼接后形如 /api/v1/raffle/strategy
 @RequestMapping("/api/${app.config.api-version}/raffle/strategy")
+@DubboService(version = "1.0")
 // 实现策略维度抽奖服务接口 IRaffleStrategyService
 public class RaffleStrategyController implements IRaffleStrategyService {
 

@@ -2,6 +2,8 @@ package com.zhaoyushi.trigger.api.dto;
 
 import lombok.Data;
 
+import java.io.Serializable;
+
 /**
  * @author zhaoy
  * @date 2026/10/14
@@ -9,7 +11,7 @@ import lombok.Data;
  */
 
 @Data
-public class RaffleAwardListRequestDTO {
+public class RaffleAwardListRequestDTO implements Serializable {
     // 废弃字段：早期按「策略ID」查询奖品列表的入参，现改为按「活动ID」查询，保留仅用于兼容旧调用，编译器会有黄色删除线标记
     @Deprecated
     private Long strategyId;

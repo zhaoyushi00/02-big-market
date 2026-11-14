@@ -19,6 +19,7 @@ import com.zhaoyushi.types.model.Response;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -42,6 +43,7 @@ import java.util.Date;
 @CrossOrigin("${app.config.cross-origin}")
 // 定义该类所有接口的公共请求路径前缀，拼接后形如 /api/v1/raffle/activity
 @RequestMapping("/api/${app.config.api-version}/raffle/activity")
+@DubboService(version = "1.0")
 public class RaffleActivityController implements IRaffleActivityService {
 
     // 注入活动参与服务，负责创建抽奖参与订单

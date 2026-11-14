@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @author zhaoy
  * @date 2026/10/14
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RaffleAwardListResponseDTO {
+public class RaffleAwardListResponseDTO implements Serializable {
 
     //奖品ID
     private Integer awardId;
