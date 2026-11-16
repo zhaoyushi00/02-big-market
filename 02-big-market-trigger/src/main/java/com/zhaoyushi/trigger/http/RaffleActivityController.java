@@ -1,11 +1,15 @@
 package com.zhaoyushi.trigger.http;
 
+import com.alibaba.fastjson.JSON;
 import com.zhaoyushi.domain.activity.model.entity.UserRaffleOrderEntity;
 import com.zhaoyushi.domain.activity.service.IRaffleActivityPartakeService;
 import com.zhaoyushi.domain.activity.service.armory.IActivityArmory;
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
 import com.zhaoyushi.domain.award.model.valobj.AwardStateVO;
 import com.zhaoyushi.domain.award.service.IAwardService;
+import com.zhaoyushi.domain.rebate.model.entity.BehaviorEntity;
+import com.zhaoyushi.domain.rebate.model.valobj.BehaviorTypeVO;
+import com.zhaoyushi.domain.rebate.service.IBehaviorRebateService;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleFactorEntity;
 import com.zhaoyushi.domain.strategy.service.IRaffleStrategy;
@@ -22,7 +26,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 抽奖活动服务控制器
@@ -47,6 +53,8 @@ import java.util.Date;
 @DubboService(version = "1.0")
 public class RaffleActivityController implements IRaffleActivityService {
 
+    private final SimpleDateFormat dateFormatDay = new SimpleDateFormat("yyyyMMdd");
+
     // 注入活动参与服务，负责创建抽奖参与订单
     @Resource
     private IRaffleActivityPartakeService raffleActivityPartakeService;  //参与活动
@@ -62,6 +70,8 @@ public class RaffleActivityController implements IRaffleActivityService {
     // 注入策略装配服务，负责策略奖品数据预热
     @Resource
     private IStrategyArmory strategyArmory;
+    @Resource
+    private IBehaviorRebateService behaviorRebateService;
 
     /**
      * 活动装配 - 数据预热 | 把活动配置的对应的 sku 一起装配
@@ -222,6 +232,75 @@ public class RaffleActivityController implements IRaffleActivityService {
                     // 设置响应信息为未知错误
                     .info(ResponseCode.UN_ERROR.getInfo())
                     // 构建响应对象（data 为空）
+                    .build();
+        }
+    }
+
+    /**
+     * 日历签到返利接口
+     *
+     * @param userId 用户ID
+     * @return 签到返利结果
+     * <p>
+     * 接口：<a href="http://localhost:8091/api/v1/raffle/activity/calendar_sign_rebate">/api/v1/raffle/activity/calendar_sign_rebate</a>
+     * 入参：xiaofuge
+     * <p>
+     * curl -X POST http://localhost:8091/api/v1/raffle/activity/calendar_sign_rebate -d "userId=xiaofuge" -H "Content-Type: application/x-www-form-urlencoded"
+     */
+    // 定义 POST 请求路径 calendar_sign_rebate，用于日历签到返利
+    @RequestMapping(value = "calendar_sign_rebate", method = RequestMethod.POST)
+    // 覆盖接口 IRaffleActivityService 中声明的 calendarSignRebate 方法
+    @Override
+    public Response<Boolean> calendarSignRebate(@RequestParam String userId) {
+        // 使用 try-catch 分别捕获业务异常与系统异常，统一封装返回结果
+        try {
+            // 记录日历签到返利开始的日志，包含用户ID
+            log.info("日历签到返利开始 userId:{}", userId);
+            // 创建行为实体，用于封装本次签到行为信息
+            BehaviorEntity behaviorEntity = new BehaviorEntity();
+            // 设置行为对应的用户ID，定位签到用户
+            behaviorEntity.setUserId(userId);
+            // 设置行为类型为「签到」，标记本次返利来源于日历签到
+            behaviorEntity.setBehaviorTypeVO(BehaviorTypeVO.SIGN);
+            // 设置外部业务单号：取当天日期（yyyyMMdd），保证同一用户同一天签到只生成一单
+            behaviorEntity.setOutBusinessNo(dateFormatDay.format(new Date()));
+            // 调用行为返利服务创建返利订单，返回生成的订单ID列表
+            List<String> orders = behaviorRebateService.createOrder(behaviorEntity);
+            // 记录日历签到返利完成的日志，包含用户ID与订单ID列表
+            log.info("日历签到返利完成 userId:{} orderIds: {}", userId, JSON.toJSONString(orders));
+            // 构建签到返利成功的响应体
+            return Response.<Boolean>builder()
+                    // 设置响应码为成功
+                    .code(ResponseCode.SUCCESS.getCode())
+                    // 设置响应信息为成功
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    // 设置响应数据为 true，表示签到返利成功
+                    .data(true)
+                    // 构建响应对象
+                    .build();
+        }catch (AppException e){
+            // 记录业务异常日志，包含用户ID与异常堆栈
+            log.error("日历签到返利异常 userId:{} ", userId, e);
+            // 构建业务异常的响应体
+            return Response.<Boolean>builder()
+                    // 设置响应码为业务异常码
+                    .code(e.getCode())
+                    // 设置响应信息为业务异常信息
+                    .info(e.getInfo())
+                    // 构建响应对象（data 为空）
+                    .build();
+        }catch (Exception e){
+            // 记录系统异常日志，包含用户ID
+            log.error("日历签到返利失败 userId:{}", userId);
+            // 构建系统异常的响应体
+            return Response.<Boolean>builder()
+                    // 设置响应码为未知错误
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    // 设置响应信息为未知错误
+                    .info(ResponseCode.UN_ERROR.getInfo())
+                    // 设置响应数据为 false，表示签到返利失败
+                    .data(false)
+                    // 构建响应对象
                     .build();
         }
     }

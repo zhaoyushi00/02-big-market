@@ -40,4 +40,11 @@ public interface IRaffleActivityService {
      * @return 抽奖结果，Response.data 中携带奖品ID、奖品标题与排序编号
      */
     Response<ActivityDrawResponseDTO> draw(ActivityDrawRequestDTO request);
+
+    /**
+     * 日历签到返利接口
+     * @param userId 用户ID
+     * @return Boolean
+     */
+    Response<Boolean> calendarSignRebate(String userId);
 }

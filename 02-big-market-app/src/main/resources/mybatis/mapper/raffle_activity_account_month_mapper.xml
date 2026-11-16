@@ -20,6 +20,13 @@
         values (
         #{userId}, #{activityId}, #{month}, #{monthCount}, #{monthCountSurplus}, now(), now())
     </insert>
+    <insert id="addAccountQuota" parameterType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccountMonth">
+        update raffle_activity_account_month
+        set month_count_surplus = month_count_surplus + #{monthCountSurplus},
+            month_count = month_count + #{monthCount},
+            update_time = now()
+        where user_id = #{userId} and activity_id = #{activityId} and month = #{month}
+    </insert>
 
     <!-- 扣减月账户额度：当月剩余次数减 1；where 限制剩余次数大于 0，防止扣成负数 -->
     <update id="updateActivityAccountMonthSubtractionQuota" parameterType="com.zhaoyushi.infrastructure.persistent.po.RaffleActivityAccountMonth">

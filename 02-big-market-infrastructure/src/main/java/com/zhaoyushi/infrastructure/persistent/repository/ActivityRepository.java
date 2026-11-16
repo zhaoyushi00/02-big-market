@@ -211,7 +211,7 @@ public class ActivityRepository implements IActivityRepository {
         raffleActivityOrder.setMonthCount(activityOrderEntity.getMonthCount());
         raffleActivityOrder.setOutBusinessNo(activityOrderEntity.getOutBusinessNo());
 
-        // 2、构建活动账户持久化对象（PO），新增时额度与剩余额度初始一致
+        // 2、构建活动账户持久化对象（PO），新增时额度与剩余额度初始一致 - 总账户
         RaffleActivityAccount raffleActivityAccount = new RaffleActivityAccount();
         raffleActivityAccount.setUserId(createOrderAggregate.getUserId());
         raffleActivityAccount.setActivityId(createOrderAggregate.getActivityId());
@@ -221,6 +221,22 @@ public class ActivityRepository implements IActivityRepository {
         raffleActivityAccount.setDayCountSurplus(createOrderAggregate.getDayCount());
         raffleActivityAccount.setMonthCount(createOrderAggregate.getMonthCount());
         raffleActivityAccount.setMonthCountSurplus(createOrderAggregate.getMonthCount());
+
+        // 账户对象 - 月
+        RaffleActivityAccountMonth raffleActivityAccountMonth = new RaffleActivityAccountMonth();
+        raffleActivityAccountMonth.setUserId(createOrderAggregate.getUserId());
+        raffleActivityAccountMonth.setActivityId(createOrderAggregate.getActivityId());
+        raffleActivityAccountMonth.setMonth(raffleActivityAccountMonth.currentMonth());
+        raffleActivityAccountMonth.setMonthCount(createOrderAggregate.getMonthCount());
+        raffleActivityAccountMonth.setMonthCountSurplus(createOrderAggregate.getMonthCount());
+
+        // 账户对象 - 日
+        RaffleActivityAccountDay raffleActivityAccountDay = new RaffleActivityAccountDay();
+        raffleActivityAccountDay.setUserId(createOrderAggregate.getUserId());
+        raffleActivityAccountDay.setActivityId(createOrderAggregate.getActivityId());
+        raffleActivityAccountDay.setDay(raffleActivityAccountDay.currentDay());
+        raffleActivityAccountDay.setDayCount(createOrderAggregate.getDayCount());
+        raffleActivityAccountDay.setDayCountSurplus(createOrderAggregate.getDayCount());
 
         try {
             // 3、以 userId 作为分片键设定路由：保证后续所有操作落在同一库表、同一连接上，从而保证事务特性
@@ -236,6 +252,10 @@ public class ActivityRepository implements IActivityRepository {
                    if (0 == count) {
                        raffleActivityAccountDao.insert(raffleActivityAccount);
                    }
+                   // 4. 更新账户 - 月
+                   raffleActivityAccountMonthDao.addAccountQuota(raffleActivityAccountMonth);
+                   // 5. 更新账户 - 日
+                   raffleActivityAccountDayDao.addAccountQuota(raffleActivityAccountDay);
                    return 1;
                } catch (DuplicateKeyException e) {
                    // 唯一索引冲突：同一业务单号重复下单，回滚事务并抛出业务异常
