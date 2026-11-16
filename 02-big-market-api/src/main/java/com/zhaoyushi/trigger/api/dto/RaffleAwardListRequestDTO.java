@@ -11,6 +11,7 @@ import java.io.Serializable;
  */
 
 @Data
+// 实现 Serializable：作为 Dubbo RPC 接口的入参，需支持 JDK 序列化以在网络间传输
 public class RaffleAwardListRequestDTO implements Serializable {
     // 废弃字段：早期按「策略ID」查询奖品列表的入参，现改为按「活动ID」查询，保留仅用于兼容旧调用，编译器会有黄色删除线标记
     @Deprecated

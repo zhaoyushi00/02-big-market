@@ -15,6 +15,7 @@ import java.io.Serializable;
  */
 // 自动生成该类的 getter/setter 等样板方法
 @Data
+// 实现 Serializable：作为 Dubbo RPC 接口的入参，需支持 JDK 序列化以在网络间传输
 public class ActivityDrawRequestDTO implements Serializable {
     /**
      * 用户ID，标识参与抽奖的用户

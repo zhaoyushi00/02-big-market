@@ -16,6 +16,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+// 实现 Serializable：作为 Dubbo RPC 接口的出参，需支持 JDK 序列化以在网络间传输
 public class RaffleAwardListResponseDTO implements Serializable {
 
     //奖品ID

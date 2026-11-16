@@ -28,6 +28,7 @@ spring:
     topic:
       activity_sku_stock_zero: activity_sku_stock_zero # 活动 SKU 库存耗尽消息的主题名
       send_award: send_award # 发奖消息的主题名（中奖记录写入后投递发奖 MQ 使用）
+      send_rebate: send_rebate # 返利发奖消息的主题名（行为返利入账后投递返利 MQ 使用）
 
 # 线程池配置
 thread:
@@ -117,18 +118,20 @@ redis:
       ping-interval: 60000
       keep-alive: true
 
+# Dubbo 服务配置
+# 将抽奖服务以 Dubbo RPC 方式暴露给其它微服务，注册中心使用 Nacos
 dubbo:
   application:
-    name: 02-big-market
-    version: 1.0
+    name: 02-big-market # Dubbo 应用名
+    version: 1.0 # Dubbo 服务版本，与 @DubboService(version = "1.0") 对应
   registry:
-    id: nacos-registry
-    address: nacos://192.168.1.108:8848
+    id: nacos-registry # 注册中心 ID
+    address: nacos://127.0.0.1:8848 # Nacos 注册中心地址（本地环境）
   protocol:
-    name: dubbo
-    port: -1
+    name: dubbo # RPC 协议：dubbo
+    port: -1 # 端口号 -1 表示自动随机端口，避免多实例端口冲突
   scan:
-    base-packages: com.zhaoyushi.trigger.api
+    base-packages: com.zhaoyushi.trigger.api # Dubbo 服务扫描包路径
 
 # 日志
 logging:

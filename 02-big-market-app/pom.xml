@@ -34,14 +34,17 @@
             <groupId>org.apache.tomcat.embed</groupId>
             <artifactId>tomcat-embed-core</artifactId>
         </dependency>
+        <!-- Dubbo 核心依赖：RPC 框架，版本由父 POM 统一管理 -->
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo</artifactId>
         </dependency>
+        <!-- Dubbo Spring Boot 启动器：自动装配 Dubbo 服务，与 @EnableDubbo 配合使用 -->
         <dependency>
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo-spring-boot-starter</artifactId>
         </dependency>
+        <!-- Nacos 客户端：作为 Dubbo 注册中心，服务注册与发现 -->
         <dependency>
             <groupId>com.alibaba.nacos</groupId>
             <artifactId>nacos-client</artifactId>

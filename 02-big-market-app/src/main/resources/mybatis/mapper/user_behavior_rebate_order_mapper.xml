@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IUserBehaviorRebateOrderDao">
+
+    <!-- 结果映射：将表 user_behavior_rebate_order 的列字段映射到持久化对象 UserBehaviorRebateOrder 的属性 -->
+    <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.UserBehaviorRebateOrder">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="order_id" property="orderId"/>
+        <result column="behavior_type" property="behaviorType"/>
+        <result column="rebate_desc" property="rebateDesc"/>
+        <result column="rebate_type" property="rebateType"/>
+        <result column="rebate_config" property="rebateConfig"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 新增返利流水：插入一条行为返利订单记录，创建/更新时间由数据库 now() 生成 -->
+    <insert id="insert" parameterType="com.zhaoyushi.infrastructure.persistent.po.UserBehaviorRebateOrder">
+        insert into user_behavior_rebate_order(
+        user_id, order_id, behavior_type, rebate_desc, rebate_type, rebate_config, biz_id, create_time, update_time
+        ) values(
+        #{userId}, #{orderId}, #{behaviorType}, #{rebateDesc}, #{rebateType}, #{rebateConfig}, #{bizId}, now(), now()
+        )
+    </insert>
+
+</mapper>

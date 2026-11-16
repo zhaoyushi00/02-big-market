@@ -49,6 +49,7 @@ import java.util.Map;
 @CrossOrigin("${app.config.cross-origin}")
 // 定义该类所有接口的公共请求路径前缀，拼接后形如 /api/v1/raffle/strategy
 @RequestMapping("/api/${app.config.api-version}/raffle/strategy")
+// 将本 Controller 注册为 Dubbo 服务提供者（版本 1.0），供其它服务通过 Dubbo 协议远程调用
 @DubboService(version = "1.0")
 // 实现策略维度抽奖服务接口 IRaffleStrategyService
 public class RaffleStrategyController implements IRaffleStrategyService {
