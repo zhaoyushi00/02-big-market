@@ -7,7 +7,7 @@
 #
 # 主机: 127.0.0.1 (MySQL 5.6.39)
 # 数据库: big_market
-# 生成时间: 2026-11-13 10:19:11 +0000
+# 生成时间: 2024-05-03 08:36:51 +0000
 # ************************************************************
 
 
@@ -28,14 +28,14 @@ use `big_market`;
 DROP TABLE IF EXISTS `award`;
 
 CREATE TABLE `award` (
-                         `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                         `award_id` int(8) NOT NULL COMMENT '抽奖奖品ID - 内部流转使用',
-                         `award_key` varchar(32) NOT NULL COMMENT '奖品对接标识 - 每一个都是一个对应的发奖策略',
-                         `award_config` varchar(32) NOT NULL COMMENT '奖品配置信息',
-                         `award_desc` varchar(128) NOT NULL COMMENT '奖品内容描述',
-                         `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                         `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                         PRIMARY KEY (`id`)
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `award_id` int(8) NOT NULL COMMENT '抽奖奖品ID - 内部流转使用',
+  `award_key` varchar(32) NOT NULL COMMENT '奖品对接标识 - 每一个都是一个对应的发奖策略',
+  `award_config` varchar(32) NOT NULL COMMENT '奖品配置信息',
+  `award_desc` varchar(128) NOT NULL COMMENT '奖品内容描述',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='奖品表';
 
 LOCK TABLES `award` WRITE;
@@ -64,16 +64,16 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `daily_behavior_rebate`;
 
 CREATE TABLE `daily_behavior_rebate` (
-                                         `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                         `behavior_type` varchar(16) NOT NULL COMMENT '行为类型（sign 签到、openai_pay 支付）',
-                                         `rebate_desc` varchar(128) NOT NULL COMMENT '返利描述',
-                                         `rebate_type` varchar(16) NOT NULL COMMENT '返利类型（sku 活动库存充值商品、integral 用户活动积分）',
-                                         `rebate_config` varchar(32) NOT NULL COMMENT '返利配置',
-                                         `state` varchar(12) NOT NULL COMMENT '状态（open 开启、close 关闭）',
-                                         `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                         `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                         PRIMARY KEY (`id`),
-                                         KEY `idx_behavior_type` (`behavior_type`)
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `behavior_type` varchar(16) NOT NULL COMMENT '行为类型（sign 签到、openai_pay 支付）',
+  `rebate_desc` varchar(128) NOT NULL COMMENT '返利描述',
+  `rebate_type` varchar(16) NOT NULL COMMENT '返利类型（sku 活动库存充值商品、integral 用户活动积分）',
+  `rebate_config` varchar(32) NOT NULL COMMENT '返利配置',
+  `state` varchar(12) NOT NULL COMMENT '状态（open 开启、close 关闭）',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_behavior_type` (`behavior_type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='日常行为返利活动配置';
 
 LOCK TABLES `daily_behavior_rebate` WRITE;
@@ -94,21 +94,21 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `raffle_activity`;
 
 CREATE TABLE `raffle_activity` (
-                                   `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                   `activity_id` bigint(12) NOT NULL COMMENT '活动ID',
-                                   `activity_name` varchar(64) NOT NULL COMMENT '活动名称',
-                                   `activity_desc` varchar(128) NOT NULL COMMENT '活动描述',
-                                   `begin_date_time` datetime NOT NULL COMMENT '开始时间',
-                                   `end_date_time` datetime NOT NULL COMMENT '结束时间',
-                                   `strategy_id` bigint(8) NOT NULL COMMENT '抽奖策略ID',
-                                   `state` varchar(8) NOT NULL DEFAULT 'create' COMMENT '活动状态',
-                                   `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                   `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                   PRIMARY KEY (`id`),
-                                   UNIQUE KEY `uq_activity_id` (`activity_id`),
-                                   UNIQUE KEY `uq_strategy_id` (`strategy_id`),
-                                   KEY `idx_begin_date_time` (`begin_date_time`),
-                                   KEY `idx_end_date_time` (`end_date_time`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `activity_id` bigint(12) NOT NULL COMMENT '活动ID',
+  `activity_name` varchar(64) NOT NULL COMMENT '活动名称',
+  `activity_desc` varchar(128) NOT NULL COMMENT '活动描述',
+  `begin_date_time` datetime NOT NULL COMMENT '开始时间',
+  `end_date_time` datetime NOT NULL COMMENT '结束时间',
+  `strategy_id` bigint(8) NOT NULL COMMENT '抽奖策略ID',
+  `state` varchar(8) NOT NULL DEFAULT 'create' COMMENT '活动状态',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_activity_id` (`activity_id`),
+  UNIQUE KEY `uq_strategy_id` (`strategy_id`),
+  KEY `idx_begin_date_time` (`begin_date_time`),
+  KEY `idx_end_date_time` (`end_date_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='抽奖活动表';
 
 LOCK TABLES `raffle_activity` WRITE;
@@ -128,15 +128,15 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `raffle_activity_count`;
 
 CREATE TABLE `raffle_activity_count` (
-                                         `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                         `activity_count_id` bigint(12) NOT NULL COMMENT '活动次数编号',
-                                         `total_count` int(8) NOT NULL COMMENT '总次数',
-                                         `day_count` int(8) NOT NULL COMMENT '日次数',
-                                         `month_count` int(8) NOT NULL COMMENT '月次数',
-                                         `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                         `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                         PRIMARY KEY (`id`),
-                                         UNIQUE KEY `uq_activity_count_id` (`activity_count_id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `activity_count_id` bigint(12) NOT NULL COMMENT '活动次数编号',
+  `total_count` int(8) NOT NULL COMMENT '总次数',
+  `day_count` int(8) NOT NULL COMMENT '日次数',
+  `month_count` int(8) NOT NULL COMMENT '月次数',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_activity_count_id` (`activity_count_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='抽奖活动次数配置表';
 
 LOCK TABLES `raffle_activity_count` WRITE;
@@ -156,17 +156,17 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `raffle_activity_sku`;
 
 CREATE TABLE `raffle_activity_sku` (
-                                       `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                       `sku` bigint(12) NOT NULL COMMENT '商品sku - 把每一个组合当做一个商品',
-                                       `activity_id` bigint(12) NOT NULL COMMENT '活动ID',
-                                       `activity_count_id` bigint(12) NOT NULL COMMENT '活动个人参与次数ID',
-                                       `stock_count` int(11) NOT NULL COMMENT '商品库存',
-                                       `stock_count_surplus` int(11) NOT NULL COMMENT '剩余库存',
-                                       `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                       `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                       PRIMARY KEY (`id`),
-                                       UNIQUE KEY `uq_sku` (`sku`),
-                                       KEY `idx_activity_id_activity_count_id` (`activity_id`,`activity_count_id`)
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `sku` bigint(12) NOT NULL COMMENT '商品sku - 把每一个组合当做一个商品',
+  `activity_id` bigint(12) NOT NULL COMMENT '活动ID',
+  `activity_count_id` bigint(12) NOT NULL COMMENT '活动个人参与次数ID',
+  `stock_count` int(11) NOT NULL COMMENT '商品库存',
+  `stock_count_surplus` int(11) NOT NULL COMMENT '剩余库存',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_sku` (`sku`),
+  KEY `idx_activity_id_activity_count_id` (`activity_id`,`activity_count_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 LOCK TABLES `raffle_activity_sku` WRITE;
@@ -186,15 +186,15 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `rule_tree`;
 
 CREATE TABLE `rule_tree` (
-                             `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                             `tree_id` varchar(32) NOT NULL COMMENT '规则树ID',
-                             `tree_name` varchar(64) NOT NULL COMMENT '规则树名称',
-                             `tree_desc` varchar(128) DEFAULT NULL COMMENT '规则树描述',
-                             `tree_node_rule_key` varchar(32) NOT NULL COMMENT '规则树根入口规则',
-                             `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                             `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                             PRIMARY KEY (`id`),
-                             UNIQUE KEY `uq_tree_id` (`tree_id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tree_id` varchar(32) NOT NULL COMMENT '规则树ID',
+  `tree_name` varchar(64) NOT NULL COMMENT '规则树名称',
+  `tree_desc` varchar(128) DEFAULT NULL COMMENT '规则树描述',
+  `tree_node_rule_key` varchar(32) NOT NULL COMMENT '规则树根入口规则',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_tree_id` (`tree_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则表-树';
 
 LOCK TABLES `rule_tree` WRITE;
@@ -217,14 +217,14 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `rule_tree_node`;
 
 CREATE TABLE `rule_tree_node` (
-                                  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                  `tree_id` varchar(32) NOT NULL COMMENT '规则树ID',
-                                  `rule_key` varchar(32) NOT NULL COMMENT '规则Key',
-                                  `rule_desc` varchar(64) NOT NULL COMMENT '规则描述',
-                                  `rule_value` varchar(128) DEFAULT NULL COMMENT '规则比值',
-                                  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                  PRIMARY KEY (`id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tree_id` varchar(32) NOT NULL COMMENT '规则树ID',
+  `rule_key` varchar(32) NOT NULL COMMENT '规则Key',
+  `rule_desc` varchar(64) NOT NULL COMMENT '规则描述',
+  `rule_value` varchar(128) DEFAULT NULL COMMENT '规则比值',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则表-树节点';
 
 LOCK TABLES `rule_tree_node` WRITE;
@@ -254,15 +254,15 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `rule_tree_node_line`;
 
 CREATE TABLE `rule_tree_node_line` (
-                                       `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                       `tree_id` varchar(32) NOT NULL COMMENT '规则树ID',
-                                       `rule_node_from` varchar(32) NOT NULL COMMENT '规则Key节点 From',
-                                       `rule_node_to` varchar(32) NOT NULL COMMENT '规则Key节点 To',
-                                       `rule_limit_type` varchar(8) NOT NULL COMMENT '限定类型；1:=;2:>;3:<;4:>=;5<=;6:enum[枚举范围];',
-                                       `rule_limit_value` varchar(32) NOT NULL COMMENT '限定值（到下个节点）',
-                                       `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                       `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                       PRIMARY KEY (`id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `tree_id` varchar(32) NOT NULL COMMENT '规则树ID',
+  `rule_node_from` varchar(32) NOT NULL COMMENT '规则Key节点 From',
+  `rule_node_to` varchar(32) NOT NULL COMMENT '规则Key节点 To',
+  `rule_limit_type` varchar(8) NOT NULL COMMENT '限定类型；1:=;2:>;3:<;4:>=;5<=;6:enum[枚举范围];',
+  `rule_limit_value` varchar(32) NOT NULL COMMENT '限定值（到下个节点）',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='规则表-树节点连线';
 
 LOCK TABLES `rule_tree_node_line` WRITE;
@@ -291,14 +291,14 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `strategy`;
 
 CREATE TABLE `strategy` (
-                            `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                            `strategy_id` bigint(8) NOT NULL COMMENT '抽奖策略ID',
-                            `strategy_desc` varchar(128) NOT NULL COMMENT '抽奖策略描述',
-                            `rule_models` varchar(256) DEFAULT NULL COMMENT '规则模型，rule配置的模型同步到此表，便于使用',
-                            `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                            `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                            PRIMARY KEY (`id`),
-                            KEY `idx_strategy_id` (`strategy_id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `strategy_id` bigint(8) NOT NULL COMMENT '抽奖策略ID',
+  `strategy_desc` varchar(128) NOT NULL COMMENT '抽奖策略描述',
+  `rule_models` varchar(256) DEFAULT NULL COMMENT '规则模型，rule配置的模型同步到此表，便于使用',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_strategy_id` (`strategy_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='抽奖策略';
 
 LOCK TABLES `strategy` WRITE;
@@ -323,20 +323,20 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `strategy_award`;
 
 CREATE TABLE `strategy_award` (
-                                  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                  `strategy_id` bigint(8) NOT NULL COMMENT '抽奖策略ID',
-                                  `award_id` int(8) NOT NULL COMMENT '抽奖奖品ID - 内部流转使用',
-                                  `award_title` varchar(128) NOT NULL COMMENT '抽奖奖品标题',
-                                  `award_subtitle` varchar(128) DEFAULT NULL COMMENT '抽奖奖品副标题',
-                                  `award_count` int(8) NOT NULL DEFAULT '0' COMMENT '奖品库存总量',
-                                  `award_count_surplus` int(8) NOT NULL DEFAULT '0' COMMENT '奖品库存剩余',
-                                  `award_rate` decimal(6,4) NOT NULL COMMENT '奖品中奖概率',
-                                  `rule_models` varchar(256) DEFAULT NULL COMMENT '规则模型，rule配置的模型同步到此表，便于使用',
-                                  `sort` int(2) NOT NULL DEFAULT '0' COMMENT '排序',
-                                  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
-                                  PRIMARY KEY (`id`),
-                                  KEY `idx_strategy_id_award_id` (`strategy_id`,`award_id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `strategy_id` bigint(8) NOT NULL COMMENT '抽奖策略ID',
+  `award_id` int(8) NOT NULL COMMENT '抽奖奖品ID - 内部流转使用',
+  `award_title` varchar(128) NOT NULL COMMENT '抽奖奖品标题',
+  `award_subtitle` varchar(128) DEFAULT NULL COMMENT '抽奖奖品副标题',
+  `award_count` int(8) NOT NULL DEFAULT '0' COMMENT '奖品库存总量',
+  `award_count_surplus` int(8) NOT NULL DEFAULT '0' COMMENT '奖品库存剩余',
+  `award_rate` decimal(6,4) NOT NULL COMMENT '奖品中奖概率',
+  `rule_models` varchar(256) DEFAULT NULL COMMENT '规则模型，rule配置的模型同步到此表，便于使用',
+  `sort` int(2) NOT NULL DEFAULT '0' COMMENT '排序',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_strategy_id_award_id` (`strategy_id`,`award_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='抽奖策略奖品概率';
 
 LOCK TABLES `strategy_award` WRITE;
@@ -384,17 +384,18 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `strategy_rule`;
 
 CREATE TABLE `strategy_rule` (
-                                 `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-                                 `strategy_id` int(8) NOT NULL COMMENT '抽奖策略ID',
-                                 `award_id` int(8) DEFAULT NULL COMMENT '抽奖奖品ID【规则类型为策略，则不需要奖品ID】',
-                                 `rule_type` tinyint(1) NOT NULL DEFAULT '0' COMMENT '抽象规则类型；1-策略规则、2-奖品规则',
-                                 `rule_model` varchar(16) NOT NULL COMMENT '抽奖规则类型【rule_random - 随机值计算、rule_lock - 抽奖几次后解锁、rule_luck_award - 幸运奖(兜底奖品)】',
-                                 `rule_value` varchar(256) NOT NULL COMMENT '抽奖规则比值',
-                                 `rule_desc` varchar(128) NOT NULL COMMENT '抽奖规则描述',
-                                 `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                 `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-                                 PRIMARY KEY (`id`),
-                                 KEY `idx_strategy_id_award_id` (`strategy_id`,`award_id`)
+  `id` bigint(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+  `strategy_id` int(8) NOT NULL COMMENT '抽奖策略ID',
+  `award_id` int(8) DEFAULT NULL COMMENT '抽奖奖品ID【规则类型为策略，则不需要奖品ID】',
+  `rule_type` tinyint(1) NOT NULL DEFAULT '0' COMMENT '抽象规则类型；1-策略规则、2-奖品规则',
+  `rule_model` varchar(16) NOT NULL COMMENT '抽奖规则类型【rule_random - 随机值计算、rule_lock - 抽奖几次后解锁、rule_luck_award - 幸运奖(兜底奖品)】',
+  `rule_value` varchar(256) NOT NULL COMMENT '抽奖规则比值',
+  `rule_desc` varchar(128) NOT NULL COMMENT '抽奖规则描述',
+  `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_strategy_id_rule_model` (`strategy_id`,`rule_model`),
+  KEY `idx_strategy_id_award_id` (`strategy_id`,`award_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='抽奖策略规则';
 
 LOCK TABLES `strategy_rule` WRITE;

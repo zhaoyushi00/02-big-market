@@ -1,5 +1,8 @@
 package com.zhaoyushi.domain.strategy.service;
 
+import com.zhaoyushi.domain.strategy.model.valobj.RuleWeightVO;
+
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,5 +26,22 @@ public interface IRaffleRule {
      * @return Map：key=规则树ID(treeId)，value=解锁所需抽奖次数(N)
      */
     Map<String, Integer> queryAwardRuleLockCount(String[] treeIds);
+
+    /**
+     * 查询奖品权重配置
+     *
+     * @param strategyId 策略ID
+     * @return 权重规则
+     */
+    List<RuleWeightVO> queryAwardRuleWeightByStrategyId(Long strategyId);
+
+
+    /**
+     * 查询奖品权重配置
+     *
+     * @param activityId 活动ID
+     * @return 权重规则
+     */
+    List<RuleWeightVO> queryAwardRuleWeightByActivityId(Long activityId);
 
 }

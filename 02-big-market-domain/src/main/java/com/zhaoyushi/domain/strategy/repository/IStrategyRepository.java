@@ -4,6 +4,7 @@ import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
 import com.zhaoyushi.domain.strategy.model.valobj.RuleTreeVO;
+import com.zhaoyushi.domain.strategy.model.valobj.RuleWeightVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
 import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
 
@@ -228,4 +229,25 @@ public interface IStrategyRepository {
      * @return Map：key=规则树ID(treeId)，value=解锁所需抽奖次数(N)
      */
     Map<String, Integer> queryAwardRuleLockCount(String[] treeIds);
+
+    /**
+     * 查询用户累计参与抽奖次数（累计消耗额度）
+     * <p>先根据策略 ID 反查活动 ID，再查询该用户的活动账户记录，用「总次数 - 剩余次数」计算出累计已参与次数，
+     * 供权重责任链（rule_weight）据此判断用户的积分档位。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @return 用户累计参与次数
+     */
+    Integer queryActivityAccountTotalUseCount(String userId, Long strategyId);
+
+    /**
+     * 查询策略的权重规则配置（rule_weight）
+     * <p>按策略 ID 查询权重规则值并解析为「积分档位 → 奖品列表」的权重规则值对象列表，
+     * 用于奖品列表页展示权重配置，或按活动查询权重规则时透传使用。
+     *
+     * @param strategyId 策略ID
+     * @return 权重规则值对象列表
+     */
+    List<RuleWeightVO> queryAwardRuleWeightByStrategyId(Long strategyId);
 }

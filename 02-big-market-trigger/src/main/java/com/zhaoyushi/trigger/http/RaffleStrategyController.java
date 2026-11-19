@@ -5,15 +5,13 @@ import com.zhaoyushi.domain.activity.service.IRaffleActivityAccountQuotaService;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleAwardEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RaffleFactorEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
+import com.zhaoyushi.domain.strategy.model.valobj.RuleWeightVO;
 import com.zhaoyushi.domain.strategy.service.IRaffleAward;
 import com.zhaoyushi.domain.strategy.service.IRaffleRule;
 import com.zhaoyushi.domain.strategy.service.IRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.armory.IStrategyArmory;
 import com.zhaoyushi.trigger.api.IRaffleStrategyService;
-import com.zhaoyushi.trigger.api.dto.RaffleAwardListRequestDTO;
-import com.zhaoyushi.trigger.api.dto.RaffleAwardListResponseDTO;
-import com.zhaoyushi.trigger.api.dto.RaffleStrategyRequestDTO;
-import com.zhaoyushi.trigger.api.dto.RaffleStrategyResponseDTO;
+import com.zhaoyushi.trigger.api.dto.*;
 import com.zhaoyushi.trigger.api.response.Response;
 import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
@@ -195,7 +193,7 @@ public class RaffleStrategyController implements IRaffleStrategyService {
             return response;
         } catch (Exception e) {
             // 记录查询奖品列表失败的日志，包含策略ID和异常堆栈
-            log.error("查询抽奖奖品列表配置失败 userId:{} activityId:{}",  requestDTO.getUserId(), requestDTO.getActivityId(), e);
+            log.error("查询抽奖奖品列表配置失败 userId:{} activityId:{}", requestDTO.getUserId(), requestDTO.getActivityId(), e);
             // 构建查询失败的响应体
             return Response.<List<RaffleAwardListResponseDTO>>builder()
                     // 设置响应码为未知错误
@@ -271,6 +269,80 @@ public class RaffleStrategyController implements IRaffleStrategyService {
                     // 设置响应信息为未知错误
                     .info(ResponseCode.UN_ERROR.getInfo())
                     // 构建响应对象
+                    .build();
+        }
+    }
+
+    // 覆盖接口 IRaffleStrategyService 中声明的查询策略权重规则方法，返回各权重档位对应的奖品列表与抽奖次数
+    @Override
+    public Response<List<RaffleStrategyRuleWeightResponseDTO>> queryRaffleStrategyRuleWeight(RaffleStrategyRuleWeightRequestDTO request) {
+
+        try {
+            // 记录查询策略权重规则配置开始的日志，包含用户ID与活动ID
+            log.info("查询抽奖策略权重规则配置开始 userId:{} activityId：{}", request.getUserId(), request.getActivityId());
+            // 1. 参数校验：userId 不能为空、activityId 不能为 null
+            if (StringUtils.isBlank(request.getUserId()) || null == request.getActivityId()) {
+                // 参数非法时抛出业务异常，返回非法参数错误码与提示信息
+                throw new AppException(ResponseCode.ILLEGAL_PARAMETER.getCode(), ResponseCode.ILLEGAL_PARAMETER.getInfo());
+            }
+
+            // 2. 查询用户在该活动下已完成的抽奖总次数（总次数 - 剩余次数），用于回显给前端展示解锁进度
+            Integer userActivityAccountTotalUseCount = raffleActivityAccountQuotaService.queryRaffleActivityAccountPartakeCount(request.getActivityId(), request.getUserId());
+
+            // 3. 查询权重规则配置：根据活动ID（内部反查策略ID）获取各权重档位的奖品配置列表
+            // 初始化权重规则响应集合，用于存放每个权重档位转换后的响应对象
+            List<RaffleStrategyRuleWeightResponseDTO> raffleStrategyRuleWeightList = new ArrayList<>();
+            List<RuleWeightVO> ruleWeightVOList = raffleRule.queryAwardRuleWeightByActivityId(request.getActivityId());
+            // 遍历每个权重档位，逐档转换为响应 DTO
+            for (RuleWeightVO ruleWeightVO : ruleWeightVOList) {
+
+                // 转换对象：初始化当前权重档位对应的奖品响应集合
+                List<RaffleStrategyRuleWeightResponseDTO.StrategyAward> strategyAwards = new ArrayList<>();
+
+                // 取出当前权重档位下配置的奖品列表
+                List<RuleWeightVO.Award> awardList = ruleWeightVO.getAwardList();
+                // 遍历奖品列表，逐一转换为奖品响应对象
+                for (RuleWeightVO.Award award : awardList) {
+                    // 创建单个奖品响应对象
+                    RaffleStrategyRuleWeightResponseDTO.StrategyAward strategyAward = new RaffleStrategyRuleWeightResponseDTO.StrategyAward();
+                    // 设置奖品ID
+                    strategyAward.setAwardId(award.getAwardId());
+                    // 设置奖品标题
+                    strategyAward.setAwardTitle(award.getAwardTitle());
+                    // 将转换后的奖品对象加入当前权重档位的奖品集合
+                    strategyAwards.add(strategyAward);
+                }
+                // 封装对象：创建权重规则响应对象，用于承载当前档位的权重值与奖品列表
+                RaffleStrategyRuleWeightResponseDTO raffleStrategyRuleWeightResponseDTO = new RaffleStrategyRuleWeightResponseDTO();
+                // 设置当前权重档位对应的抽奖次数门槛（抽满 N 次进入该权重）
+                raffleStrategyRuleWeightResponseDTO.setRuleWeightCount(ruleWeightVO.getWeight());
+                // 设置当前权重档位可抽到的奖品列表
+                raffleStrategyRuleWeightResponseDTO.setStrategyAwards(strategyAwards);
+                // 设置用户在该活动下的总抽奖次数（每个档位都回显同一份，便于前端判断当前处于哪个档位）
+                raffleStrategyRuleWeightResponseDTO.setUserActivityAccountTotalUseCount(userActivityAccountTotalUseCount);
+                // 将当前档位的响应对象加入结果集合
+                raffleStrategyRuleWeightList.add(raffleStrategyRuleWeightResponseDTO);
+            }
+            // 构建查询成功的响应体
+            Response<List<RaffleStrategyRuleWeightResponseDTO>> response = Response.<List<RaffleStrategyRuleWeightResponseDTO>>builder()
+                    // 设置响应码为成功
+                    .code(ResponseCode.SUCCESS.getCode())
+                    // 设置响应信息为成功
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    // 设置响应数据为权重规则列表
+                    .data(raffleStrategyRuleWeightList)
+                    // 构建响应对象
+                    .build();
+            // 记录查询策略权重规则配置完成的日志，包含响应内容
+            log.info("查询抽奖策略权重规则配置完成 userId:{} activityId：{} response: {}", request.getUserId(), request.getActivityId(), com.alibaba.fastjson.JSON.toJSONString(response));
+            // 返回权重规则查询结果
+            return response;
+        } catch (Exception e) {
+            // 异常兜底：当前未对异常做处理，静默吞掉异常
+            log.error("查询抽奖策略权重规则配置失败 userId:{} activityId：{}", request.getUserId(), request.getActivityId(), e);
+            return Response.<List<RaffleStrategyRuleWeightResponseDTO>>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info(ResponseCode.UN_ERROR.getInfo())
                     .build();
         }
     }

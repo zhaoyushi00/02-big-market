@@ -41,7 +41,18 @@ public interface IStrategyAwardDao {
      */
     String queryStrategyAwardRuleModels(StrategyAward strategyAward);
 
+    /**
+     * 按策略ID和奖品ID将该奖品的剩余库存减 1（库存扣减，用于抽奖消耗）
+     *
+     * @param strategyAward 扣减条件（含 strategyId、awardId）
+     */
     void updateStrategyAwardStock(StrategyAward strategyAward);
 
+    /**
+     * 按策略ID和奖品ID查询单个奖品明细信息
+     *
+     * @param strategyAwardReq 查询条件（含 strategyId、awardId）
+     * @return 策略奖品明细信息
+     */
     StrategyAward queryStrategyAward(StrategyAward strategyAwardReq);
 }

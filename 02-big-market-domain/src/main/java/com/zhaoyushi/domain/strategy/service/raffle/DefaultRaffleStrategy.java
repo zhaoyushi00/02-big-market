@@ -4,10 +4,7 @@ import com.zhaoyushi.domain.strategy.model.entity.RaffleFactorEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RuleActionEntity;
 import com.zhaoyushi.domain.strategy.model.entity.RuleMatterEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyAwardEntity;
-import com.zhaoyushi.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
-import com.zhaoyushi.domain.strategy.model.valobj.RuleTreeVO;
-import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardRuleModelVO;
-import com.zhaoyushi.domain.strategy.model.valobj.StrategyAwardStockKeyVO;
+import com.zhaoyushi.domain.strategy.model.valobj.*;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
 import com.zhaoyushi.domain.strategy.service.AbstractRaffleStrategy;
 import com.zhaoyushi.domain.strategy.service.IRaffleAward;
@@ -169,5 +166,16 @@ public class DefaultRaffleStrategy extends AbstractRaffleStrategy implements IRa
     @Override
     public Map<String, Integer> queryAwardRuleLockCount(String[] treeIds) {
         return repository.queryAwardRuleLockCount(treeIds);
+    }
+
+    @Override
+    public List<RuleWeightVO> queryAwardRuleWeightByStrategyId(Long strategyId) {
+        return repository.queryAwardRuleWeightByStrategyId(strategyId);
+    }
+
+    @Override
+    public List<RuleWeightVO> queryAwardRuleWeightByActivityId(Long activityId) {
+        Long strategyIdByActivityId = repository.queryStrategyIdByActivityId(activityId);
+        return queryAwardRuleWeightByStrategyId(strategyIdByActivityId);
     }
 }

@@ -32,7 +32,7 @@ import java.util.List;
  * @description 行为返利服务实现
  */
 @Service
-public class BehaviorRebateService implements IBehaviorRebateService{
+public class BehaviorRebateService implements IBehaviorRebateService {
 
     // 注入行为返利仓储接口：负责查询返利配置、保存返利订单与任务
     @Resource
@@ -56,24 +56,25 @@ public class BehaviorRebateService implements IBehaviorRebateService{
         // 1、查询返利配置：按行为类型取出所有「开启中」的返利配置
         List<DailyBehaviorRebateVO> dailyBehaviorRebateVOS = behaviorRebateRepository.queryDailyBehaviorRebateConfig(behaviorEntity.getBehaviorTypeVO());
         // 无可用返利配置时直接返回空列表，后续流程不再处理
-        if(null == dailyBehaviorRebateVOS || dailyBehaviorRebateVOS.isEmpty()) return new ArrayList<>();
+        if (null == dailyBehaviorRebateVOS || dailyBehaviorRebateVOS.isEmpty()) return new ArrayList<>();
 
         // 2、构建聚合对象：遍历每条返利配置，逐条生成订单与任务
         ArrayList<String> orderIds = new ArrayList<>();
         ArrayList<BehaviorRebateAggregate> behaviorRebateAggregates = new ArrayList<>();
-        for (DailyBehaviorRebateVO dailyBehaviorRebateVO : dailyBehaviorRebateVOS){
+        for (DailyBehaviorRebateVO dailyBehaviorRebateVO : dailyBehaviorRebateVOS) {
             // 拼装业务唯一标识：用户ID_返利类型_外部业务ID，作为幂等/防重入账的依据
             String bizId = behaviorEntity.getUserId() + Constants.UNDERLINE + dailyBehaviorRebateVO.getRebateType() + Constants.UNDERLINE + behaviorEntity.getOutBusinessNo();
             // 构建返利订单实体：随机 12 位数字作为订单号
             BehaviorRebateOrderEntity behaviorRebateOrderEntity = BehaviorRebateOrderEntity.builder()
-                        .userId(behaviorEntity.getUserId())
-                        .orderId(RandomStringUtils.randomNumeric(12))
-                        .behaviorType(dailyBehaviorRebateVO.getBehaviorType())
-                        .rebateDesc(dailyBehaviorRebateVO.getRebateDesc())
-                        .rebateType(dailyBehaviorRebateVO.getRebateType())
-                        .rebateConfig(dailyBehaviorRebateVO.getRebateConfig())
-                        .bizId(bizId)
-                        .build();
+                    .userId(behaviorEntity.getUserId())
+                    .orderId(RandomStringUtils.randomNumeric(12))
+                    .behaviorType(dailyBehaviorRebateVO.getBehaviorType())
+                    .rebateDesc(dailyBehaviorRebateVO.getRebateDesc())
+                    .rebateType(dailyBehaviorRebateVO.getRebateType())
+                    .rebateConfig(dailyBehaviorRebateVO.getRebateConfig())
+                    .outBusinessNo(behaviorEntity.getOutBusinessNo())
+                    .bizId(bizId)
+                    .build();
             // 收集订单 ID，作为方法返回值
             orderIds.add(behaviorRebateOrderEntity.getOrderId());
 
@@ -112,5 +113,10 @@ public class BehaviorRebateService implements IBehaviorRebateService{
 
         // 4、返回本次行为生成的全部返利订单 ID 集合
         return orderIds;
+    }
+
+    @Override
+    public List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo) {
+        return behaviorRebateRepository.queryOrderByOutBusinessNo(userId, outBusinessNo);
     }
 }

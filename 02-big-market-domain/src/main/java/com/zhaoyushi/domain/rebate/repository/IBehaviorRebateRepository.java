@@ -1,6 +1,7 @@
 package com.zhaoyushi.domain.rebate.repository;
 
 import com.zhaoyushi.domain.rebate.model.aggregate.BehaviorRebateAggregate;
+import com.zhaoyushi.domain.rebate.model.entity.BehaviorRebateOrderEntity;
 import com.zhaoyushi.domain.rebate.model.valobj.BehaviorTypeVO;
 import com.zhaoyushi.domain.rebate.model.valobj.DailyBehaviorRebateVO;
 
@@ -40,4 +41,5 @@ public interface IBehaviorRebateRepository {
      */
     void saveUserRebateRecord(String userId, List<BehaviorRebateAggregate> behaviorRebateAggregates);
 
+    List<BehaviorRebateOrderEntity> queryOrderByOutBusinessNo(String userId, String outBusinessNo);
 }

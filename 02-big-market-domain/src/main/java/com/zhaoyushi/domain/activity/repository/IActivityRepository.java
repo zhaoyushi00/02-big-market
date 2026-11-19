@@ -180,4 +180,8 @@ public interface IActivityRepository {
      * @return 用户今日已参与抽奖次数，无记录时返回 0
      */
     Integer queryRaffleActivityAvvountDayPartakeCount(Long activityId, String userId);
+
+    ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId);
+
+    Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId);
 }

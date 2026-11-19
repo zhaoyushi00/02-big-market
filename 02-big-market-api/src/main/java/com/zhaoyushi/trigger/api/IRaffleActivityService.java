@@ -5,6 +5,8 @@ import com.zhaoyushi.trigger.api.dto.ActivityDrawRequestDTO;
 // 引入活动抽奖响应结果对象，作为 draw 接口的出参
 import com.zhaoyushi.trigger.api.dto.ActivityDrawResponseDTO;
 // 引入统一响应包装对象，用于封装接口返回的 code/info/data
+import com.zhaoyushi.trigger.api.dto.UserActivityAccountRequestDTO;
+import com.zhaoyushi.trigger.api.dto.UserActivityAccountResponseDTO;
 import com.zhaoyushi.types.model.Response;
 
 /**
@@ -47,4 +49,19 @@ public interface IRaffleActivityService {
      * @return Boolean
      */
     Response<Boolean> calendarSignRebate(String userId);
+
+    /**
+     * 判断是否完成日历签到返利接口
+     * @param userId 用户ID
+     * @return Boolean
+     */
+    Response<Boolean> isCalendarSignRebate(String userId);
+
+    /**
+     * 查询用户活动账户
+     *
+     * @param request 请求对象「活动ID、用户ID」
+     * @return 返回结果「总额度、月额度、日额度」
+     */
+    Response<UserActivityAccountResponseDTO> queryUserActivityAccount(UserActivityAccountRequestDTO request);
 }

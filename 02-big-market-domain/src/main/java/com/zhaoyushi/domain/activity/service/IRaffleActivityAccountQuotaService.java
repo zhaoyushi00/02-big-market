@@ -1,5 +1,6 @@
 package com.zhaoyushi.domain.activity.service;
 
+import com.zhaoyushi.domain.activity.model.entity.ActivityAccountEntity;
 import com.zhaoyushi.domain.activity.model.entity.SkuRechargeEntity;
 import com.zhaoyushi.domain.activity.service.quota.AbstractRaffleActivityAccountQuota;
 
@@ -36,4 +37,15 @@ public interface IRaffleActivityAccountQuotaService {
      * @return 用户今日已参与抽奖次数
      */
     Integer queryRaffleActivityAvvountDayPartakeCount(Long activityId, String userId);
+
+    /**
+     * 查询活动账户额度「总、月、日」
+     *
+     * @param activityId 活动ID
+     * @param userId     用户ID
+     * @return 账户实体
+     */
+    ActivityAccountEntity queryActivityAccountEntity(Long activityId, String userId);
+
+    Integer queryRaffleActivityAccountPartakeCount(Long activityId, String userId);
 }

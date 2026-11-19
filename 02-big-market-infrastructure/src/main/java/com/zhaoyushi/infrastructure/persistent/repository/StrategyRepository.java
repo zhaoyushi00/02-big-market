@@ -5,6 +5,7 @@ import com.zhaoyushi.domain.strategy.model.entity.StrategyEntity;
 import com.zhaoyushi.domain.strategy.model.entity.StrategyRuleEntity;
 import com.zhaoyushi.domain.strategy.model.valobj.*;
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
+import com.zhaoyushi.domain.strategy.service.rule.chain.factory.DefaultChainFactory;
 import com.zhaoyushi.infrastructure.persistent.dao.*;
 import com.zhaoyushi.infrastructure.persistent.po.*;
 import com.zhaoyushi.infrastructure.persistent.redis.IRedisService;
@@ -50,6 +51,8 @@ public class StrategyRepository implements IStrategyRepository {
     private IRuleTreeNodeDao ruleTreeNodeDao;
     @Resource
     private IRuleTreeNodeLineDao ruleTreeNodeLineDao;
+    @Resource
+    private IRaffleActivityAccountDao raffleActivityAccountDao;
 
     /**
      * 查询策略奖品列表（带缓存）
@@ -67,14 +70,14 @@ public class StrategyRepository implements IStrategyRepository {
 //        读（getValue）：Redis  ──▶  字节/JSON  ──反序列化──▶  Java对象
 
         /*
-        * 拼接缓存键。STRATEGY_AWARD_KEY 的值是 "big_market_strategy_award_key_"。
-        * 例如 strategyId = 10001 时，最终 key 为 big_market_strategy_award_key_10001，保证不同策略的缓存互不干扰。
-        * */
+         * 拼接缓存键。STRATEGY_AWARD_KEY 的值是 "big_market_strategy_award_key_"。
+         * 例如 strategyId = 10001 时，最终 key 为 big_market_strategy_award_key_10001，保证不同策略的缓存互不干扰。
+         * */
         String cacheKey = Constants.RedisKey.STRATEGY_AWARD_LIST_KEY + strategyId;
         //缓存优先：能命中缓存就不查数据库，减少 DB 压力、提升响应速度。
         List<StrategyAwardEntity> strategyAwardEntities = redisService.getValue(cacheKey);
 
-        if(null != strategyAwardEntities && !strategyAwardEntities.isEmpty()) return strategyAwardEntities;
+        if (null != strategyAwardEntities && !strategyAwardEntities.isEmpty()) return strategyAwardEntities;
 
         // 从库中读取数据
         List<StrategyAward> strategyAwards = strategyAwardDao.queryStrategyAwardListByStrategyId(strategyId);
@@ -83,17 +86,17 @@ public class StrategyRepository implements IStrategyRepository {
         strategyAwardEntities = new ArrayList<>(strategyAwards.size());
         for (StrategyAward strategyAward : strategyAwards) {
             StrategyAwardEntity strategyAwardEntity = StrategyAwardEntity.builder()
-                        .strategyId(strategyAward.getStrategyId())
-                        .awardId(strategyAward.getAwardId())
-                        .awardCount(strategyAward.getAwardCount())
-                        .awardCountSurplus(strategyAward.getAwardCountSurplus())
-                        .awardRate(strategyAward.getAwardRate())
-                        .awardSubtitle(strategyAward.getAwardSubtitle())
-                        .awardTitle(strategyAward.getAwardTitle())
-                        .sort(strategyAward.getSort())
-                        // 拷贝规则模型串（rule_models）：用于后续奖品列表查询时定位其绑定的规则树
-                        .ruleModels(strategyAward.getRuleModels())
-                        .build();
+                    .strategyId(strategyAward.getStrategyId())
+                    .awardId(strategyAward.getAwardId())
+                    .awardCount(strategyAward.getAwardCount())
+                    .awardCountSurplus(strategyAward.getAwardCountSurplus())
+                    .awardRate(strategyAward.getAwardRate())
+                    .awardSubtitle(strategyAward.getAwardSubtitle())
+                    .awardTitle(strategyAward.getAwardTitle())
+                    .sort(strategyAward.getSort())
+                    // 拷贝规则模型串（rule_models）：用于后续奖品列表查询时定位其绑定的规则树
+                    .ruleModels(strategyAward.getRuleModels())
+                    .build();
             strategyAwardEntities.add(strategyAwardEntity);
         }
         redisService.setValue(cacheKey, strategyAwardEntities);
@@ -204,7 +207,7 @@ public class StrategyRepository implements IStrategyRepository {
         String cacheKey = Constants.RedisKey.STRATEGY_KEY + strategyId;
         StrategyEntity strategyEntity = redisService.getValue(cacheKey);
 
-        if(null!=strategyEntity) return strategyEntity;
+        if (null != strategyEntity) return strategyEntity;
         Strategy strategy = strategyDao.queryStrategyByStrategyId(strategyId);
         strategyEntity = StrategyEntity.builder()
                 .strategyId(strategy.getStrategyId())
@@ -386,7 +389,7 @@ public class StrategyRepository implements IStrategyRepository {
         // decr 原子扣减库存，并返回扣减后的剩余量
         long surplus = redisService.decr(cacheKay);
         // 剩余量为负数说明库存已耗尽
-        if(surplus < 0){
+        if (surplus < 0) {
             // 回写为 0，避免库存变成负数
             redisService.setValue(cacheKay, 0);
             // 返回 false 表示扣减失败（无库存可扣）
@@ -399,12 +402,12 @@ public class StrategyRepository implements IStrategyRepository {
         Boolean lock = false;
 
         // 若传入了活动结束时间，则为锁 Key 设置过期时间，避免其永久驻留 Redis
-        if (null != endDateTime){
+        if (null != endDateTime) {
             // 计算过期时长：从「当前时刻」到「活动结束时刻」再加 1 天缓冲
             long expireMillis = endDateTime.getTime() - System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1);
             // 带过期时间的 setNx：key 不存在时设置值并指定过期时长，key 已存在则不做任何动作
             lock = redisService.setNx(lockKey, expireMillis, TimeUnit.MILLISECONDS);
-        }else {
+        } else {
             // 通过 setNx 抢占锁 Key，抢占成功表示本次扣减有效
             // 将 key 的值设为 value，当且仅当 key 不存在。
             // 若给定的 key 已经存在，则 SETNX 不做任何动作。
@@ -413,7 +416,7 @@ public class StrategyRepository implements IStrategyRepository {
             lock = redisService.setNx(lockKey);
         }
         // 抢占失败时记录日志，便于排查
-        if(!lock){
+        if (!lock) {
             log.info("策略奖品库存加锁失败{}", lockKey);
         }
         // 返回锁抢占结果
@@ -560,12 +563,12 @@ public class StrategyRepository implements IStrategyRepository {
     @Override
     public Map<String, Integer> queryAwardRuleLockCount(String[] treeIds) {
         // 防御性判空：入参数组为空时直接返回空 Map，避免后续 DAO 层拼装空 in 条件报错
-        if(null == treeIds || treeIds.length == 0) return new HashMap<>();
+        if (null == treeIds || treeIds.length == 0) return new HashMap<>();
         // 批量查询多个规则树中的 rule_lock 节点（只取 tree_id 与 rule_value 两列）
         List<RuleTreeNode> ruleTreeNodes = ruleTreeNodeDao.queryRuleLocks(treeIds);
         // 组装返回 Map：key=规则树ID，value=解锁次数
         Map<String, Integer> map = new HashMap<>();
-        for (RuleTreeNode node : ruleTreeNodes){
+        for (RuleTreeNode node : ruleTreeNodes) {
             // 取规则树 ID 作为 Map 的 key
             String treeId = node.getTreeId();
             // 将 rule_value（如 "5"）解析为整数，作为解锁所需抽奖次数
@@ -574,6 +577,104 @@ public class StrategyRepository implements IStrategyRepository {
             map.put(treeId, ruleValue);
         }
         return map;
+    }
+
+    /**
+     * 查询用户累计参与抽奖次数（累计消耗额度）
+     * <p>先根据策略 ID 反查活动 ID，再查询该用户的活动账户记录，
+     * 用「总次数 - 剩余次数」计算出累计已参与次数，供权重责任链（rule_weight）据此判断用户的积分档位。
+     *
+     * @param userId     用户ID
+     * @param strategyId 策略ID
+     * @return 用户累计参与次数
+     */
+    @Override
+    public Integer queryActivityAccountTotalUseCount(String userId, Long strategyId) {
+        // 按策略 ID 反查绑定的活动 ID
+        Long activityIdByStrategyId = raffleActivityDao.queryActivityIdByStrategyId(strategyId);
+        // 按「活动 ID + 用户 ID」查询用户的活动账户记录（含总次数、日剩余次数等字段）
+        RaffleActivityAccount raffleActivityAccount = raffleActivityAccountDao.queryActivityAccountByUserId(RaffleActivityAccount.builder()
+                .activityId(activityIdByStrategyId)
+                .userId(userId)
+                .build());
+        // 总次数 - 剩余次数 = 累计已参与次数（即用户累计消耗的抽奖额度）
+        return raffleActivityAccount.getTotalCount() - raffleActivityAccount.getDayCountSurplus();
+    }
+
+    /**
+     * 查询策略的权重规则配置（rule_weight）
+     * <p>按策略 ID 查询权重规则值并解析为「积分档位 → 奖品列表」的权重规则值对象列表，
+     * 优先从 Redis 缓存读取，未命中则查库解析并回填缓存。用于奖品列表页展示权重配置，
+     * 或按活动查询权重规则时透传使用。
+     *
+     * @param strategyId 策略ID
+     * @return 权重规则值对象列表
+     */
+    @Override
+    public List<RuleWeightVO> queryAwardRuleWeightByStrategyId(Long strategyId) {
+        // 优先从缓存获取：拼接权重规则缓存 Key
+        String cacheKey = Constants.RedisKey.STRATEGY_RULE_WEIGHT_KEY + strategyId;
+        // 尝试从 Redis 读取权重规则值对象列表
+        List<RuleWeightVO> ruleWeightVOS = redisService.getValue(cacheKey);
+        // 缓存命中则直接返回，避免重复查库与解析
+        if (null != ruleWeightVOS) return ruleWeightVOS;
+
+        // 缓存未命中，初始化空列表用于组装结果
+        ruleWeightVOS = new ArrayList<>();
+        // 1. 查询权重规则配置：组装查询参数对象（策略 ID + 规则模型 rule_weight）
+        StrategyRule strategyRuleReq = new StrategyRule();
+        // 设置策略 ID
+        strategyRuleReq.setStrategyId(strategyId);
+        // 设置规则模型为权重规则（rule_weight）
+        strategyRuleReq.setRuleModel(DefaultChainFactory.LogicModel.RULE_WEIGHT.getCode());
+        // 查询权重规则的比值串，如 "4000:102,103,104,105 5000:102,103,104,105,106,107"
+        String ruleValue = strategyRuleDao.queryStrategyRuleValue(strategyRuleReq);
+        // 2. 借助实体对象转换规则：创建策略规则实体，用于解析比值串
+        StrategyRuleEntity strategyRuleEntity = new StrategyRuleEntity();
+        // 设置规则模型为权重规则，保证 getRuleWeightValues() 走权重解析分支
+        strategyRuleEntity.setRuleModel(DefaultChainFactory.LogicModel.RULE_WEIGHT.getCode());
+        // 设置比值串
+        strategyRuleEntity.setRuleValue(ruleValue);
+        // 解析比值串为 {档位串 -> 奖品ID列表}，如 {"4000:102,103,104,105" -> [102,103,104,105]}
+        Map<String, List<Integer>> ruleWeightValues = strategyRuleEntity.getRuleWeightValues();
+
+        // 3. 遍历规则组装奖品配置：取出所有权重档位 Key
+        Set<String> ruleWeightKeys = ruleWeightValues.keySet();
+        for (String ruleWeightKey : ruleWeightKeys) {
+            // 取出当前档位下的奖品 ID 列表
+            List<Integer> awardIds = ruleWeightValues.get(ruleWeightKey);
+            // 初始化当前档位的奖品明细列表
+            List<RuleWeightVO.Award> awardList = new ArrayList<>();
+            // 遍历奖品 ID，逐个查询奖品标题组装奖品明细（也可以修改为一次从数据库查询，避免循环查库）
+            for (Integer awardId : awardIds) {
+                // 组装奖品查询参数对象（策略 ID + 奖品 ID）
+                StrategyAward strategyAwardReq = new StrategyAward();
+                strategyAwardReq.setStrategyId(strategyId);
+                strategyAwardReq.setAwardId(awardId);
+                // 查询奖品配置
+                StrategyAward strategyAward = strategyAwardDao.queryStrategyAward(strategyAwardReq);
+                // 组装奖品明细并加入列表（只取奖品 ID 与标题）
+                awardList.add(RuleWeightVO.Award.builder()
+                        .awardId(strategyAward.getAwardId())
+                        .awardTitle(strategyAward.getAwardTitle())
+                        .build());
+            }
+
+            // 组装权重规则值对象：完整比值串、档位值、奖品 ID 列表、奖品明细列表
+            ruleWeightVOS.add(RuleWeightVO.builder()
+                    .ruleValue(ruleValue)
+                    // 档位 Key 形如 "4000:102,103"，按冒号切分取第 0 段得到档位值 4000
+                    .weight(Integer.valueOf(ruleWeightKey.split(Constants.COLON)[0]))
+                    .awardIds(awardIds)
+                    .awardList(awardList)
+                    .build());
+        }
+
+        // 设置缓存 - 实际场景中，这类数据，可以在活动下架的时候统一清空缓存。
+        redisService.setValue(cacheKey, ruleWeightVOS);
+
+        // 返回组装完成的权重规则值对象列表
+        return ruleWeightVOS;
     }
 
 }

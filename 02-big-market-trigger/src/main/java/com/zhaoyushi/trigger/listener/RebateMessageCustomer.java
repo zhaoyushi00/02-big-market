@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 public class RebateMessageCustomer {
 
     // 注入返利消息主题名（配置于 application.yml 的 spring.rabbitmq.topic.send_rebate）
-    @Value("spring.rabbitmq.topic.send_rebate")
+    @Value("${spring.rabbitmq.topic.send_rebate}")
     private String topic;
 
     // 注入抽奖活动账户额度服务：负责按 SKU 给用户账户充值抽奖次数（入账奖励）
@@ -53,8 +53,8 @@ public class RebateMessageCustomer {
             // 5、入账奖励：构建 SKU 充值实体，调用下单服务给用户账户充值抽奖次数
             SkuRechargeEntity skuRechargeEntity = new SkuRechargeEntity();
             skuRechargeEntity.setUserId(rebateMessage.getUserId()); // 充值主体：用户ID
-            skuRechargeEntity.setOutBusinessNo(rebateMessage.getRebateConfig()); // 幂等业务单号（外部透传，防重复入账）
-            skuRechargeEntity.setSku(Long.valueOf(skuRechargeEntity.getSku())); // 商品 SKU（活动 + 次数配置的组合编码）
+            skuRechargeEntity.setSku(Long.valueOf(rebateMessage.getRebateConfig())); // 商品 SKU：返利配置里存的就是 sku 值（如 9011）
+            skuRechargeEntity.setOutBusinessNo(rebateMessage.getBizId()); // 幂等业务单号：业务唯一 ID，防重复入账
             raffleActivityAccountQuotaService.createSkuRechargeOrder(skuRechargeEntity); // 创建充值订单，返回订单号
         }catch (Exception e){
             // 消费失败：记录错误日志后向上抛出，交由 RabbitMQ 重试机制处理

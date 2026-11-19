@@ -11,6 +11,7 @@
         <result column="rebate_desc" property="rebateDesc"/>
         <result column="rebate_type" property="rebateType"/>
         <result column="rebate_config" property="rebateConfig"/>
+        <result column="out_business_no" property="outBusinessNo"/>
         <result column="biz_id" property="bizId"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -19,10 +20,16 @@
     <!-- 新增返利流水：插入一条行为返利订单记录，创建/更新时间由数据库 now() 生成 -->
     <insert id="insert" parameterType="com.zhaoyushi.infrastructure.persistent.po.UserBehaviorRebateOrder">
         insert into user_behavior_rebate_order(
-        user_id, order_id, behavior_type, rebate_desc, rebate_type, rebate_config, biz_id, create_time, update_time
+        user_id, order_id, behavior_type, rebate_desc, rebate_type, rebate_config,out_business_no, biz_id, create_time, update_time
         ) values(
-        #{userId}, #{orderId}, #{behaviorType}, #{rebateDesc}, #{rebateType}, #{rebateConfig}, #{bizId}, now(), now()
+        #{userId}, #{orderId}, #{behaviorType}, #{rebateDesc}, #{rebateType}, #{rebateConfig},#{outBusinessNo}, #{bizId}, now(), now()
         )
     </insert>
+    <select id="queryOrderByOutBusinessNo"
+            parameterType="com.zhaoyushi.infrastructure.persistent.po.UserBehaviorRebateOrder" resultMap="dataMap">
+        select user_id, order_id, behavior_type, rebate_desc, rebate_type, rebate_config, out_business_no, biz_id
+        from user_behavior_rebate_order
+        where user_id = #{userId} and out_business_no = #{outBusinessNo}
+    </select>
 
 </mapper>

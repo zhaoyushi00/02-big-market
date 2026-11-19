@@ -43,5 +43,6 @@ public class Constants {
         public static String ACTIVITY_SKU_STOCK_COUNT_KEY = "activity_sku_stock_count_key_";
         /** 活动 SKU 库存扣减延迟队列 key（Redisson 延迟队列，用于异步趋势更新数据库库存） */
         public static String ACTIVITY_SKU_COUNT_QUERY_KEY = "activity_sku_count_query_key";
+        public static String STRATEGY_RULE_WEIGHT_KEY = "strategy_rule_weight_key_";
     }
 }
