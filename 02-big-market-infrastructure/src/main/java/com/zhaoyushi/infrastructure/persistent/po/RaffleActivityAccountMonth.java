@@ -19,7 +19,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class RaffleActivityAccountMonth {
 
-    private final SimpleDateFormat dateFormatMonth = new SimpleDateFormat("yyyy-MM");
+    private static final SimpleDateFormat dateFormatMonth = new SimpleDateFormat("yyyy-MM");
 
     /** 自增ID */
     private String id;
@@ -38,7 +38,7 @@ public class RaffleActivityAccountMonth {
     /** 更新时间 */
     private Date updateTime;
 
-    public String currentMonth() {
+    public static String currentMonth() {
         // 将当前时间格式化为 yyyy-MM-dd 并返回
         return dateFormatMonth.format(new Date());
     }

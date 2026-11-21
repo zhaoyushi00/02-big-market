@@ -274,8 +274,9 @@ public class RaffleStrategyController implements IRaffleStrategyService {
     }
 
     // 覆盖接口 IRaffleStrategyService 中声明的查询策略权重规则方法，返回各权重档位对应的奖品列表与抽奖次数
+    @RequestMapping(value = "query_raffle_strategy_rule_weight", method = RequestMethod.POST)
     @Override
-    public Response<List<RaffleStrategyRuleWeightResponseDTO>> queryRaffleStrategyRuleWeight(RaffleStrategyRuleWeightRequestDTO request) {
+    public Response<List<RaffleStrategyRuleWeightResponseDTO>> queryRaffleStrategyRuleWeight(@RequestBody RaffleStrategyRuleWeightRequestDTO request) {
 
         try {
             // 记录查询策略权重规则配置开始的日志，包含用户ID与活动ID

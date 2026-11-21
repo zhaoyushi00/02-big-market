@@ -22,7 +22,7 @@ import java.util.Date;
 public class RaffleActivityAccountDay {
 
     // 日期格式化器，用于生成 yyyy-MM-dd 格式的当前日期字符串
-    private final SimpleDateFormat dateFormatDay = new SimpleDateFormat("yyyy-MM-dd");
+    private final static SimpleDateFormat dateFormatDay = new SimpleDateFormat("yyyy-MM-dd");
 
     /** 自增ID */
     private String id;
@@ -47,7 +47,7 @@ public class RaffleActivityAccountDay {
      *
      * @return 当前日期字符串，格式 yyyy-MM-dd
      */
-    public String currentDay() {
+    public static String currentDay() {
         // 将当前时间格式化为 yyyy-MM-dd 并返回
         return dateFormatDay.format(new Date());
     }
