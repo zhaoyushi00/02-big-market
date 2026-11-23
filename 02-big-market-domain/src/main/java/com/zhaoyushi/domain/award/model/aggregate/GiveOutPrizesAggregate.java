@@ -1,22 +1,14 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 聚合
 package com.zhaoyushi.domain.award.model.aggregate;
 
-// 引入用户中奖记录实体，作为聚合内部组装发奖记录的对象
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
-// 引入用户积分奖品实体，作为聚合内部组装积分奖品的对象
 import com.zhaoyushi.domain.award.model.entity.UserCreditAwardEntity;
-// 引入奖品状态枚举，用于设置发奖记录的初始状态
 import com.zhaoyushi.domain.award.model.valobj.AwardStateVO;
-// 引入 Lombok @AllArgsConstructor，自动生成包含所有字段的全参构造方法
 import lombok.AllArgsConstructor;
-// 引入 Lombok @Builder，自动生成建造者模式的链式构造方法
 import lombok.Builder;
-// 引入 Lombok @Data，自动生成 getter/setter/toString/equals/hashCode 方法
 import lombok.Data;
-// 引入 Lombok @NoArgsConstructor，自动生成无参构造方法
 import lombok.NoArgsConstructor;
 
-// 引入 BigDecimal，作为积分值的精确数值类型
 import java.math.BigDecimal;
 
 /**

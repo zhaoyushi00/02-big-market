@@ -1,12 +1,8 @@
 package com.zhaoyushi.domain.activity.model.entity;
 
-// 引入 @AllArgsConstructor，生成包含全部字段的构造器
 import lombok.AllArgsConstructor;
-// 引入 @Builder，支持以构建者模式创建本对象
 import lombok.Builder;
-// 引入 @Data，自动生成 getter/setter 等样板方法
 import lombok.Data;
-// 引入 @NoArgsConstructor，生成无参构造器
 import lombok.NoArgsConstructor;
 
 /**

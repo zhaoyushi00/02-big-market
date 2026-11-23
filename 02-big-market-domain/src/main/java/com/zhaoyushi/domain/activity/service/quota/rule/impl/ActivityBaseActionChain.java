@@ -3,17 +3,13 @@ package com.zhaoyushi.domain.activity.service.quota.rule.impl;
 import com.zhaoyushi.domain.activity.model.entity.ActivityCountEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivityEntity;
 import com.zhaoyushi.domain.activity.model.entity.ActivitySkuEntity;
-// 引入活动状态值对象，用于校验活动是否处于 open 状态
 import com.zhaoyushi.domain.activity.model.valobj.ActivityStateVO;
 import com.zhaoyushi.domain.activity.service.quota.rule.AbstractActionChain;
-// 引入响应码枚举，用于抛出业务异常时指定错误码与提示
 import com.zhaoyushi.types.enums.ResponseCode;
-// 引入业务异常类，校验失败时抛出
 import com.zhaoyushi.types.exception.AppException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-// 引入 java.util.Date，用于活动日期范围校验
 import java.util.Date;
 
 /**

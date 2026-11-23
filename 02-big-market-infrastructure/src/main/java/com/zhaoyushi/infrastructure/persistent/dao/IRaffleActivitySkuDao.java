@@ -3,7 +3,6 @@ package com.zhaoyushi.infrastructure.persistent.dao;
 import com.zhaoyushi.infrastructure.persistent.po.RaffleActivitySku;
 import org.apache.ibatis.annotations.Mapper;
 
-// 引入 List 集合，作为按活动查询 SKU 列表的返回类型
 import java.util.List;
 
 /**

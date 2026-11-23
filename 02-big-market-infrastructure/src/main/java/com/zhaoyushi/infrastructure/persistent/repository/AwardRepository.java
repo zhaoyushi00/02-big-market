@@ -1,49 +1,27 @@
 // 声明当前类所属的包路径：基础设施层 - 持久化 - 仓储实现
 package com.zhaoyushi.infrastructure.persistent.repository;
 
-// 引入分库分表路由策略接口，用于手动指定 SQL 落库的分库索引
 import cn.bugstack.middleware.db.router.strategy.IDBRouterStrategy;
-// 引入 fastjson2 的 JSON 工具，用于将消息对象序列化为 JSON 字符串
 import com.alibaba.fastjson2.JSON;
-// 引入发放奖品聚合对象，作为保存发奖聚合方法的入参
 import com.zhaoyushi.domain.award.model.aggregate.GiveOutPrizesAggregate;
-// 引入用户中奖记录聚合对象，作为仓储方法的入参
 import com.zhaoyushi.domain.award.model.aggregate.UserAwardRecordAggregate;
-// 引入任务实体对象（领域层），从中提取消息、主题、状态等信息
 import com.zhaoyushi.domain.award.model.entity.TaskEntity;
-// 引入用户中奖记录实体对象（领域层），从中提取中奖明细信息
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
-// 引入用户积分奖品实体对象，从中提取积分值
 import com.zhaoyushi.domain.award.model.entity.UserCreditAwardEntity;
-// 引入账户状态枚举，用于设置积分账户初始状态
 import com.zhaoyushi.domain.award.model.valobj.AccountStatusVO;
-// 引入奖品仓储接口，本类实现该接口
 import com.zhaoyushi.domain.award.repository.IAwardRepository;
-// 引入消息发送器，用于向 MQ 投递发奖消息
 import com.zhaoyushi.infrastructure.event.EventPublisher;
-// 引入任务表 DAO 等 DAO 接口（含奖品 DAO、积分账户 DAO），用于相关表的增删改查
 import com.zhaoyushi.infrastructure.persistent.dao.*;
-// 引入任务表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.Task;
-// 引入用户中奖记录表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord;
-// 引入用户积分账户持久化对象，作为积分入账的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserCreditAccount;
-// 引入用户抽奖订单表持久化对象，作为更新抽奖单状态的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserRaffleOrder;
-// 引入响应码枚举，用于抛出业务异常时携带错误码
 import com.zhaoyushi.types.enums.ResponseCode;
-// 引入应用异常类，用于抛出业务异常
 import com.zhaoyushi.types.exception.AppException;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 Spring 的唯一键冲突异常，用于捕获数据库唯一索引冲突
 import org.springframework.dao.DuplicateKeyException;
-// 引入 @Repository 注解，将本类注册为 Spring 仓储 Bean
 import org.springframework.stereotype.Repository;
-// 引入事务模板，用于编程式控制事务的提交与回滚
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**

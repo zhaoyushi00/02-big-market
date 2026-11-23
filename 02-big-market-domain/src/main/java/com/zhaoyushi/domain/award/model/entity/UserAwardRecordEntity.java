@@ -1,18 +1,12 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 实体对象
 package com.zhaoyushi.domain.award.model.entity;
 
-// 引入奖品状态枚举值对象，用于描述中奖记录的奖品发放状态
 import com.zhaoyushi.domain.award.model.valobj.AwardStateVO;
-// 引入 Lombok 全参构造器注解，自动生成包含所有字段的构造方法
 import lombok.AllArgsConstructor;
-// 引入 Lombok Builder 注解，支持以建造者模式链式创建对象
 import lombok.Builder;
-// 引入 Lombok Data 注解，自动生成 getter/setter/toString/equals/hashCode
 import lombok.Data;
-// 引入 Lombok 无参构造器注解，自动生成无参构造方法
 import lombok.NoArgsConstructor;
 
-// 引入 java.util.Date，作为中奖时间字段的类型
 import java.util.Date;
 
 /**

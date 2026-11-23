@@ -1,32 +1,19 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 发奖策略 - 实现
 package com.zhaoyushi.domain.award.service.distribute.impl;
 
-// 引入发放奖品聚合对象，用于组装发奖记录与积分奖品并在同一事务内落库
 import com.zhaoyushi.domain.award.model.aggregate.GiveOutPrizesAggregate;
-// 引入分发奖品实体，作为发奖策略方法的统一入参类型
 import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
-// 引入用户中奖记录实体，用于构建发奖记录
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
-// 引入用户积分奖品实体，用于构建积分奖品
 import com.zhaoyushi.domain.award.model.entity.UserCreditAwardEntity;
-// 引入奖品状态枚举，用于设置发奖记录的完成状态
 import com.zhaoyushi.domain.award.model.valobj.AwardStateVO;
-// 引入奖品仓储接口，用于查询奖品配置与保存发奖聚合
 import com.zhaoyushi.domain.award.repository.IAwardRepository;
-// 引入发奖策略接口，本类为其积分类型的具体实现
 import com.zhaoyushi.domain.award.service.distribute.IDistributeAward;
-// 引入常量类，获取配置分隔符（逗号）
 import com.zhaoyushi.types.common.Constants;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 commons-lang3 的 StringUtils，用于字符串判空
 import org.apache.commons.lang3.StringUtils;
-// 引入 @Component 注解，将本类注册为 Spring Bean（Bean 名即奖品 key）
 import org.springframework.stereotype.Component;
 
-// 引入 BigDecimal，作为积分值的精确数值类型
 import java.math.BigDecimal;
-// 引入 MathContext，用于控制随机积分的舍入精度
 import java.math.MathContext;
 
 /**

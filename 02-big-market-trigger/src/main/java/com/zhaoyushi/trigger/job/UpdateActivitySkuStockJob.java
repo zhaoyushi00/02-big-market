@@ -1,17 +1,11 @@
 // 声明当前类所属的包路径：触发器层 - 定时任务
 package com.zhaoyushi.trigger.job;
 
-// 引入活动 SKU 库存 Key 值对象，作为队列取出的元素类型
 import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
-// 引入活动 SKU 库存处理接口，提供取队列与更新库存能力
 import com.zhaoyushi.domain.activity.service.IRaffleActivitySkuStockService;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 @Scheduled 注解，用于声明定时任务执行方法
 import org.springframework.scheduling.annotation.Scheduled;
-// 引入 @Component 注解，将本类注册为 Spring Bean
 import org.springframework.stereotype.Component;
 
 /**

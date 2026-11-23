@@ -1,17 +1,11 @@
 // 声明当前类所属的包路径：基础设施层 - 事件
 package com.zhaoyushi.infrastructure.event;
 
-// 引入 fastjson 的 JSON 工具，用于对象与 JSON 字符串互转
 import com.alibaba.fastjson.JSON;
-// 引入基础事件抽象类，本类发布其内部的事件消息体
 import com.zhaoyushi.types.event.BaseEvent;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 RabbitTemplate，Spring AMQP 提供的 MQ 发送模板
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-// 引入 @Autowired 注解，用于自动注入依赖
 import org.springframework.beans.factory.annotation.Autowired;
-// 引入 @Component 注解，将本类注册为 Spring Bean
 import org.springframework.stereotype.Component;
 
 /**

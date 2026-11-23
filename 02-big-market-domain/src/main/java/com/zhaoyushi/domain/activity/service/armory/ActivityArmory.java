@@ -1,20 +1,13 @@
 // 声明当前类所属的包路径：领域层 - 活动模块 - 服务 - 装配
 package com.zhaoyushi.domain.activity.service.armory;
 
-// 引入活动 SKU 实体，用于承载数据库查询出的活动商品信息
 import com.zhaoyushi.domain.activity.model.entity.ActivitySkuEntity;
-// 引入活动仓储接口，提供 SKU/活动/次数配置的查询与缓存能力
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
-// 引入全局常量类，获取 Redis Key 前缀
 import com.zhaoyushi.types.common.Constants;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Spring 的 @Service 注解，将本类注册为 Spring Bean
 import org.springframework.stereotype.Service;
 
-// 引入 java.util.Date，作为活动结束时间参数类型
 import java.util.Date;
-// 引入 List 集合，作为按活动查询 SKU 列表的返回类型
 import java.util.List;
 
 /**

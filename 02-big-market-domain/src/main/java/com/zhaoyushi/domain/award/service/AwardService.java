@@ -1,32 +1,21 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 服务实现
 package com.zhaoyushi.domain.award.service;
 
-// 引入发奖消息事件，用于构建发奖 MQ 消息体与获取消息主题
 import com.zhaoyushi.domain.award.event.SendAwardMessageEvent;
-// 引入用户中奖记录聚合对象，作为组装结果传入仓储层
 import com.zhaoyushi.domain.award.model.aggregate.UserAwardRecordAggregate;
 // 引入任务实体对象，用于承载待发送的发奖消息
-// 引入分发奖品实体对象，作为发奖服务方法的入参类型
 import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
 import com.zhaoyushi.domain.award.model.entity.TaskEntity;
-// 引入用户中奖记录实体对象，作为方法入参
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
-// 引入任务状态枚举值对象，用于设置任务初始状态为「创建」
 import com.zhaoyushi.domain.award.model.valobj.TaskStateVO;
-// 引入奖品仓储接口，用于持久化聚合对象
 import com.zhaoyushi.domain.award.repository.IAwardRepository;
 // 引入基础事件抽象类，使用其内部 EventMessage 作为消息主体类型
-// 引入发奖策略接口，用于按奖品 key 路由到具体发奖实现
 import com.zhaoyushi.domain.award.service.distribute.IDistributeAward;
 import com.zhaoyushi.types.event.BaseEvent;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 @Service 注解，将本类注册为 Spring 服务 Bean
 import org.springframework.stereotype.Service;
 
-// 引入 Map 集合，用于收集所有发奖策略实现（key 为奖品类型标识）
 import java.util.Map;
 
 /**

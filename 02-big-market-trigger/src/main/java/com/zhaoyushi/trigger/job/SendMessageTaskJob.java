@@ -1,24 +1,15 @@
 // 声明当前类所属的包路径：触发器层 - 定时任务
 package com.zhaoyushi.trigger.job;
 
-// 引入任务实体对象（领域层），作为待发送消息的载体
 import com.zhaoyushi.domain.Task.model.entity.TaskEntity;
-// 引入消息任务服务接口，提供查询/发送/更新任务状态能力
 import com.zhaoyushi.domain.Task.service.ITaskService;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 @Scheduled 注解，用于声明定时任务执行方法
 import org.springframework.scheduling.annotation.Scheduled;
-// 引入 @Component 注解，将本类注册为 Spring Bean
 import org.springframework.stereotype.Component;
-// 引入分库分表路由策略接口，用于手动切换分库分表
 import cn.bugstack.middleware.db.router.strategy.IDBRouterStrategy;
 
-// 引入 List 集合，用于接收查询到的任务列表
 import java.util.List;
-// 引入线程池执行器，用于异步执行任务发送，提高吞吐
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**

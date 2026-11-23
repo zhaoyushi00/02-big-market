@@ -1,16 +1,11 @@
 // 声明当前类所属的包路径：领域层 - 任务模块 - 服务实现
 package com.zhaoyushi.domain.Task.service;
 
-// 引入任务实体对象，作为方法入参/返回值类型
 import com.zhaoyushi.domain.Task.model.entity.TaskEntity;
-// 引入任务仓储接口，本服务通过它访问底层数据与 MQ
 import com.zhaoyushi.domain.Task.repository.ITaskRepository;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 @Service 注解，将本类注册为 Spring 服务 Bean
 import org.springframework.stereotype.Service;
 
-// 引入 List 集合，用于返回任务列表
 import java.util.List;
 
 /**

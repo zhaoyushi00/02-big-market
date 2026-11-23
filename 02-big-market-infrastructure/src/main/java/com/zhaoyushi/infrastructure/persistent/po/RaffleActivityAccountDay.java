@@ -5,9 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// 引入 SimpleDateFormat，用于把日期格式化为 yyyy-MM-dd 字符串
 import java.text.SimpleDateFormat;
-// 引入 Date，作为时间字段类型及格式化入参
 import java.util.Date;
 
 /**

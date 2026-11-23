@@ -1,7 +1,6 @@
 // 声明当前类所属的包路径：领域层 - 任务模块 - 实体对象
 package com.zhaoyushi.domain.Task.model.entity;
 
-// 引入 Lombok 的 @Data 注解，自动生成 getter/setter/toString/equals/hashCode 方法
 import lombok.Data;
 
 /**

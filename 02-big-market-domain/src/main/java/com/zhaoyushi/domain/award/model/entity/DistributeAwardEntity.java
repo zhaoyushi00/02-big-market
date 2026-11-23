@@ -1,13 +1,9 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 实体
 package com.zhaoyushi.domain.award.model.entity;
 
-// 引入 Lombok @AllArgsConstructor，自动生成包含所有字段的全参构造方法
 import lombok.AllArgsConstructor;
-// 引入 Lombok @Builder，自动生成建造者模式的链式构造方法
 import lombok.Builder;
-// 引入 Lombok @Data，自动生成 getter/setter/toString/equals/hashCode 方法
 import lombok.Data;
-// 引入 Lombok @NoArgsConstructor，自动生成无参构造方法
 import lombok.NoArgsConstructor;
 
 /**

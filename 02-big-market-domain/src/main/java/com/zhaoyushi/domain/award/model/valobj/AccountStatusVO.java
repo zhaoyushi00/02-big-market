@@ -1,9 +1,7 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 值对象
 package com.zhaoyushi.domain.award.model.valobj;
 
-// 引入 Lombok @AllArgsConstructor，自动生成包含所有字段的构造方法（枚举常量通过它传入 code 与 desc）
 import lombok.AllArgsConstructor;
-// 引入 Lombok @Getter，自动生成所有字段的 getter 方法
 import lombok.Getter;
 
 /**

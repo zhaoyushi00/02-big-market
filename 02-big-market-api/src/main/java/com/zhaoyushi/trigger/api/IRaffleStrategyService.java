@@ -1,11 +1,8 @@
 package com.zhaoyushi.trigger.api;
 
-// 通配引入 dto 包下全部请求/响应对象，减少逐个 import 的重复代码
 import com.zhaoyushi.trigger.api.dto.*;
-// 引入统一响应包装对象，用于封装接口返回的 code/info/data
 import com.zhaoyushi.trigger.api.response.Response;
 
-// 引入集合类型，作为查询奖品列表接口的返回类型
 import java.util.List;
 
 /**

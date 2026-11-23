@@ -1,9 +1,7 @@
 // 声明当前类所属的包路径：基础设施层 - 持久化 - DAO
 package com.zhaoyushi.infrastructure.persistent.dao;
 
-// 引入用户积分账户持久化对象，作为 DAO 方法的入参类型
 import com.zhaoyushi.infrastructure.persistent.po.UserCreditAccount;
-// 引入 MyBatis 的 @Mapper 注解，将本接口注册为 MyBatis Mapper
 import org.apache.ibatis.annotations.Mapper;
 
 /**

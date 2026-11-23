@@ -1,16 +1,11 @@
 // 声明当前类所属的包路径：领域层 - 事件
 package com.zhaoyushi.domain.event;
 
-// 引入基础事件抽象类，本类继承它并定义消息体与主题
 import com.zhaoyushi.types.event.BaseEvent;
-// 引入随机字符串工具，用于生成消息唯一 ID
 import org.apache.commons.lang3.RandomStringUtils;
-// 引入 @Value 注解，用于从配置文件中注入 topic 值
 import org.springframework.beans.factory.annotation.Value;
-// 引入 @Component 注解，将本类注册为 Spring Bean
 import org.springframework.stereotype.Component;
 
-// 引入 java.util.Date，作为消息时间戳类型
 import java.util.Date;
 
 /**

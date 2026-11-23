@@ -1,7 +1,6 @@
 // 声明当前接口所属的包路径：领域层 - 活动模块 - 服务 - 调度
 package com.zhaoyushi.domain.activity.service.armory;
 
-// 引入 java.util.Date，作为活动结束时间参数类型
 import java.util.Date;
 
 /**

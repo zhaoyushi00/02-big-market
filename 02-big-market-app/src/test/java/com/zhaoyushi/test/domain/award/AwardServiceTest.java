@@ -1,31 +1,19 @@
 // 声明当前类所属的包路径：测试模块 - 领域层 - 奖品
 package com.zhaoyushi.test.domain.award;
 
-// 引入用户中奖记录实体对象，用于构造测试入参
 import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
-// 引入奖品状态枚举值对象，用于设置中奖记录的初始状态
 import com.zhaoyushi.domain.award.model.valobj.AwardStateVO;
-// 引入奖品服务接口，作为被测对象
 import com.zhaoyushi.domain.award.service.IAwardService;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 RandomStringUtils 工具，用于生成随机订单号
 import org.apache.commons.lang3.RandomStringUtils;
-// 引入 JUnit 4 的 @Test 注解，标记测试方法
 import org.junit.Test;
-// 引入 JUnit 4 的 @RunWith 注解，指定测试运行器
 import org.junit.runner.RunWith;
-// 引入 @SpringBootTest 注解，启动 Spring 上下文进行集成测试
 import org.springframework.boot.test.context.SpringBootTest;
-// 引入 SpringRunner，使 Spring 测试上下文与 JUnit 4 配合工作
 import org.springframework.test.context.junit4.SpringRunner;
 
-// 引入 java.util.Date，作为中奖时间字段的类型
 import java.util.Date;
-// 引入 CountDownLatch，用于阻塞主线程等待异步任务执行
 import java.util.concurrent.CountDownLatch;
 
 /**

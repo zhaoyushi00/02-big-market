@@ -14,7 +14,6 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-// 引入 CountDownLatch，用于阻塞主线程等待异步消息消费完成
 import java.util.concurrent.CountDownLatch;
 
 /**

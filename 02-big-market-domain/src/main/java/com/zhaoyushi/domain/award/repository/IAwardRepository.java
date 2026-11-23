@@ -1,10 +1,8 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 仓储接口
 package com.zhaoyushi.domain.award.repository;
 
-// 引入用户中奖记录聚合对象，作为仓储方法的入参类型
 import com.zhaoyushi.domain.award.model.aggregate.GiveOutPrizesAggregate;
 import com.zhaoyushi.domain.award.model.aggregate.UserAwardRecordAggregate;
-// 引入用户中奖记录实体对象（当前接口未直接使用，保留以备用）
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
 
 /**

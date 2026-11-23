@@ -1,24 +1,15 @@
 // 声明当前类所属的包路径：基础设施层 - 持久化 - 仓储实现
 package com.zhaoyushi.infrastructure.persistent.repository;
 
-// 引入任务实体对象（领域层），作为方法入参/返回值类型
 import com.zhaoyushi.domain.Task.model.entity.TaskEntity;
-// 引入任务仓储接口，本类实现该接口
 import com.zhaoyushi.domain.Task.repository.ITaskRepository;
-// 引入消息发送器，用于向 MQ 投递消息
 import com.zhaoyushi.infrastructure.event.EventPublisher;
-// 引入任务表 DAO，用于任务的增删改查
 import com.zhaoyushi.infrastructure.persistent.dao.ITaskDao;
-// 引入任务表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.Task;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 @Repository 注解，将本类注册为 Spring 仓储 Bean
 import org.springframework.stereotype.Repository;
 
-// 引入 ArrayList，用于构建任务实体列表
 import java.util.ArrayList;
-// 引入 List 集合，作为查询结果的返回类型
 import java.util.List;
 
 /**

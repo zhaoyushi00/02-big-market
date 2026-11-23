@@ -1,6 +1,5 @@
 package com.zhaoyushi.trigger.api.dto;
 
-// 引入 Lombok 的 @Data 注解，编译期自动生成 getter/setter/equals/hashCode/toString
 import lombok.Data;
 
 import java.io.Serializable;

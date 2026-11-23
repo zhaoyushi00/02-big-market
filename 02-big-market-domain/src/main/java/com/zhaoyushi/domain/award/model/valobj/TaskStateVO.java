@@ -1,7 +1,6 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 值对象
 package com.zhaoyushi.domain.award.model.valobj;
 
-// 引入 Lombok 通配符导入，自动引入 @Getter、@AllArgsConstructor 等注解
 import lombok.*;
 
 /**

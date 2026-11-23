@@ -1,10 +1,7 @@
 package com.zhaoyushi.trigger.api;
 
-// 引入活动抽奖请求参数对象，作为 draw 接口的入参
 import com.zhaoyushi.trigger.api.dto.ActivityDrawRequestDTO;
-// 引入活动抽奖响应结果对象，作为 draw 接口的出参
 import com.zhaoyushi.trigger.api.dto.ActivityDrawResponseDTO;
-// 引入统一响应包装对象，用于封装接口返回的 code/info/data
 import com.zhaoyushi.trigger.api.dto.UserActivityAccountRequestDTO;
 import com.zhaoyushi.trigger.api.dto.UserActivityAccountResponseDTO;
 import com.zhaoyushi.types.model.Response;

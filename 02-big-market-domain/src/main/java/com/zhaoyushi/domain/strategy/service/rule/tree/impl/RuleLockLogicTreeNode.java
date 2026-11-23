@@ -1,18 +1,11 @@
 package com.zhaoyushi.domain.strategy.service.rule.tree.impl;
 
-// 引入规则校验结果枚举（ALLOW 放行 / TAKE_OVER 拦截），用于封装节点判定结果
 import com.zhaoyushi.domain.strategy.model.valobj.RuleLogicCheckTypeVO;
-// 引入策略仓储接口，用于查询用户今日抽奖次数
 import com.zhaoyushi.domain.strategy.repository.IStrategyRepository;
-// 引入决策树节点接口，本类作为「次数锁」节点实现
 import com.zhaoyushi.domain.strategy.service.rule.tree.ILogicTreeNode;
-// 引入决策树工厂的节点结果对象（TreeActionEntity）
 import com.zhaoyushi.domain.strategy.service.rule.tree.factory.DefaultTreeFactory;
-// 引入 @Resource 注解，用于按名称注入仓储依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，编译期自动注入 log 日志对象
 import lombok.extern.slf4j.Slf4j;
-// 引入 @Component 注解，将本节点注册为 Spring Bean
 import org.springframework.stereotype.Component;
 
 import java.util.Date;

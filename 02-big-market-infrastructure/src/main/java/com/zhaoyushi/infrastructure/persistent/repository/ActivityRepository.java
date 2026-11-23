@@ -8,9 +8,7 @@ import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import com.zhaoyushi.domain.activity.model.valobj.ActivityStateVO;
 import com.zhaoyushi.domain.activity.model.valobj.UserRaffleOrderStateVO;
 import com.zhaoyushi.domain.activity.repository.IActivityRepository;
-// 引入活动 SKU 库存清空消息事件，用于库存耗尽时构建并发布 MQ 消息
 import com.zhaoyushi.domain.event.ActivitySkuStockZeroMessageEvent;
-// 引入事件发布器，用于发送 MQ 消息
 import com.zhaoyushi.infrastructure.event.EventPublisher;
 import com.zhaoyushi.infrastructure.persistent.dao.*;
 import com.zhaoyushi.infrastructure.persistent.po.*;
@@ -20,20 +18,16 @@ import com.zhaoyushi.types.enums.ResponseCode;
 import com.zhaoyushi.types.exception.AppException;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-// 引入 Redisson 阻塞队列接口，作为延迟队列的目标队列
 import org.redisson.api.RBlockingQueue;
-// 引入 Redisson 延迟队列接口，用于实现延迟投递（延迟 3 秒）
 import org.redisson.api.RDelayedQueue;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.support.TransactionTemplate;
 
 // 引入 java.util.Date，作为活动结束时间参数类型
-// 引入 ArrayList，用于创建指定容量的 SKU 实体列表
 import java.util.ArrayList;
 import java.util.Date;
 // 引入 java.util.concurrent.TimeUnit，用于时间单位换算（延迟队列、锁过期时间）
-// 引入 List 集合，作为按活动查询 SKU 列表的返回类型
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

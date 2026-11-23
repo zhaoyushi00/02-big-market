@@ -1,7 +1,6 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 发奖策略
 package com.zhaoyushi.domain.award.service.distribute;
 
-// 引入分发奖品实体，作为发奖策略方法的统一入参类型
 import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
 
 /**

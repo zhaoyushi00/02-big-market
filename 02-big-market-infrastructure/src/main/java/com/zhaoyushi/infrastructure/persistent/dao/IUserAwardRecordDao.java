@@ -1,11 +1,8 @@
 // 声明当前类所属的包路径：基础设施层 - 持久化 - DAO
 package com.zhaoyushi.infrastructure.persistent.dao;
 
-// 引入分库分表策略注解，声明本表需要按 userId 进行分库分表路由
 import cn.bugstack.middleware.db.router.annotation.DBRouterStrategy;
-// 引入用户中奖记录表持久化对象，作为 DAO 方法的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord;
-// 引入 MyBatis 的 @Mapper 注解，将本接口注册为 MyBatis Mapper
 import org.apache.ibatis.annotations.Mapper;
 
 /**

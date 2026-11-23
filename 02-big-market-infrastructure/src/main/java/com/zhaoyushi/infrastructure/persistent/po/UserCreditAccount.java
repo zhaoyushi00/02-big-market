@@ -1,12 +1,9 @@
 // 声明当前类所属的包路径：基础设施层 - 持久化 - PO
 package com.zhaoyushi.infrastructure.persistent.po;
 
-// 引入 Lombok @Data，自动生成 getter/setter/toString/equals/hashCode 方法
 import lombok.Data;
 
-// 引入 BigDecimal，作为积分值的精确数值类型
 import java.math.BigDecimal;
-// 引入 Date，作为创建时间与更新时间的类型
 import java.util.Date;
 
 /**

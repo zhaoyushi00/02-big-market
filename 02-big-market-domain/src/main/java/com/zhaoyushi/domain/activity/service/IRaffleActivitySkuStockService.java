@@ -1,7 +1,6 @@
 // 声明当前接口所属的包路径：领域层 - 活动模块 - 服务
 package com.zhaoyushi.domain.activity.service;
 
-// 引入活动 SKU 库存 Key 值对象，作为队列元素类型与返回值类型
 import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 import com.zhaoyushi.domain.activity.service.quota.RaffleActivityAccountQuotaService;
 

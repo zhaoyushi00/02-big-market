@@ -1,11 +1,8 @@
 // 声明当前类所属的包路径：领域层 - 奖品模块 - 服务接口
 package com.zhaoyushi.domain.award.service;
 
-// 引入分发奖品实体对象，作为发奖服务方法的入参类型
 import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
-// 引入用户中奖记录实体对象，作为服务方法的入参类型
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
-// 引入 @Service 注解（当前接口未直接使用，保留以备用）
 import org.springframework.stereotype.Service;
 
 /**

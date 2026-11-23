@@ -1,29 +1,17 @@
 // 声明当前类所属的包路径：触发器层 - 消息监听器
 package com.zhaoyushi.trigger.listener;
 
-// 引入 fastjson 的 JSON 工具，用于将消息字符串反序列化为对象
 import com.alibaba.fastjson.JSON;
-// 引入 fastjson 的 TypeReference，用于保留泛型信息进行反序列化
 import com.alibaba.fastjson.TypeReference;
-// 引入发奖消息事件，作为消息反序列化的目标类型
 import com.zhaoyushi.domain.award.event.SendAwardMessageEvent;
-// 引入分发奖品实体，用于组装发奖入参
 import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
-// 引入发奖服务接口，用于执行实际发奖
 import com.zhaoyushi.domain.award.service.IAwardService;
-// 引入基础事件抽象类，作为消息反序列化的外层结构
 import com.zhaoyushi.types.event.BaseEvent;
-// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
-// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
-// 引入 @Queue 注解，用于声明监听队列（队列不存在时自动创建）
 import org.springframework.amqp.rabbit.annotation.Queue;
-// 引入 @RabbitListener 注解，将方法注册为 RabbitMQ 消息监听器
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
-// 引入 @Value 注解，用于从配置文件中读取 topic 名称
 import org.springframework.beans.factory.annotation.Value;
-// 引入 @Component 注解，将本类注册为 Spring Bean
 import org.springframework.stereotype.Component;
 
 /**

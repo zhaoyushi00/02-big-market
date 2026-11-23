@@ -3,10 +3,8 @@ package com.zhaoyushi.domain.activity.repository;
 import com.zhaoyushi.domain.activity.model.aggregate.CreatePartakeOrderAggregate;
 import com.zhaoyushi.domain.activity.model.aggregate.CreateQuotaOrderAggregate;
 import com.zhaoyushi.domain.activity.model.entity.*;
-// 引入活动 SKU 库存 Key 值对象，作为延迟队列元素与返回值类型
 import com.zhaoyushi.domain.activity.model.valobj.ActivitySkuStockKeyVO;
 
-// 引入 java.util.Date，作为活动结束时间参数类型
 import java.util.Date;
 import java.util.List;
 
