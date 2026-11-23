@@ -5,26 +5,30 @@ package com.zhaoyushi.infrastructure.persistent.repository;
 import cn.bugstack.middleware.db.router.strategy.IDBRouterStrategy;
 // 引入 fastjson2 的 JSON 工具，用于将消息对象序列化为 JSON 字符串
 import com.alibaba.fastjson2.JSON;
+// 引入发放奖品聚合对象，作为保存发奖聚合方法的入参
+import com.zhaoyushi.domain.award.model.aggregate.GiveOutPrizesAggregate;
 // 引入用户中奖记录聚合对象，作为仓储方法的入参
 import com.zhaoyushi.domain.award.model.aggregate.UserAwardRecordAggregate;
 // 引入任务实体对象（领域层），从中提取消息、主题、状态等信息
 import com.zhaoyushi.domain.award.model.entity.TaskEntity;
 // 引入用户中奖记录实体对象（领域层），从中提取中奖明细信息
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
+// 引入用户积分奖品实体对象，从中提取积分值
+import com.zhaoyushi.domain.award.model.entity.UserCreditAwardEntity;
+// 引入账户状态枚举，用于设置积分账户初始状态
+import com.zhaoyushi.domain.award.model.valobj.AccountStatusVO;
 // 引入奖品仓储接口，本类实现该接口
 import com.zhaoyushi.domain.award.repository.IAwardRepository;
 // 引入消息发送器，用于向 MQ 投递发奖消息
 import com.zhaoyushi.infrastructure.event.EventPublisher;
-// 引入任务表 DAO，用于任务的增删改查
-import com.zhaoyushi.infrastructure.persistent.dao.ITaskDao;
-// 引入用户中奖记录表 DAO，用于中奖记录的写入
-import com.zhaoyushi.infrastructure.persistent.dao.IUserAwardRecordDao;
-// 引入用户抽奖订单表 DAO，用于更新抽奖单状态为已使用
-import com.zhaoyushi.infrastructure.persistent.dao.IUserRaffleOrderDao;
+// 引入任务表 DAO 等 DAO 接口（含奖品 DAO、积分账户 DAO），用于相关表的增删改查
+import com.zhaoyushi.infrastructure.persistent.dao.*;
 // 引入任务表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.Task;
 // 引入用户中奖记录表持久化对象，作为 DAO 的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord;
+// 引入用户积分账户持久化对象，作为积分入账的入参
+import com.zhaoyushi.infrastructure.persistent.po.UserCreditAccount;
 // 引入用户抽奖订单表持久化对象，作为更新抽奖单状态的入参
 import com.zhaoyushi.infrastructure.persistent.po.UserRaffleOrder;
 // 引入响应码枚举，用于抛出业务异常时携带错误码
@@ -78,6 +82,12 @@ public class AwardRepository implements IAwardRepository {
     // 注入用户抽奖订单表 DAO，用于将抽奖单状态更新为已使用（防重复抽奖）
     @Resource
     private IUserRaffleOrderDao userRaffleOrderDao;
+    // 注入奖品表 DAO，用于查询奖品配置与奖品类型标识
+    @Resource
+    private IAwardDao awardDao;
+    // 注入用户积分账户 DAO，用于积分账户的累加与新建
+    @Resource
+    private IUserCreditAccountDao userCreditAccountDao;
 
     /**
      * 保存用户中奖记录（聚合）
@@ -196,5 +206,107 @@ public class AwardRepository implements IAwardRepository {
             taskDao.updateTaskSendMessageFail(task);
         }
 
+    }
+
+    /**
+     * 查询奖品配置信息（如积分范围）
+     *
+     * @param awardId 奖品ID
+     * @return 奖品配置字符串
+     */
+    @Override
+    public String queryAwardConfig(Integer awardId) {
+        // 委托奖品 DAO 根据奖品ID查询奖品配置
+        return awardDao.queryAwardConfigByAwardId(awardId);
+    }
+
+    /**
+     * 保存发奖聚合对象（发奖记录 + 积分账户，同一事务内写入）
+     *
+     * <p>在同一事务内完成两步：先累加积分（账户不存在则新建），
+     * 再将中奖记录状态更新为完成；任一步失败则整体回滚。
+     *
+     * @param giveOutPrizesAggregate 发放奖品聚合对象
+     */
+    @Override
+    public void saveGiveOutPrizesAggregate(GiveOutPrizesAggregate giveOutPrizesAggregate) {
+        // 从聚合对象中取出用户ID（作为分库路由键）
+        String userId = giveOutPrizesAggregate.getUserId();
+        // 从聚合对象中取出用户中奖记录实体
+        UserAwardRecordEntity userAwardRecordEntity = giveOutPrizesAggregate.getUserAwardRecordEntity();
+        // 从聚合对象中取出用户积分奖品实体
+        UserCreditAwardEntity userCreditAwardEntity = giveOutPrizesAggregate.getUserCreditAwardEntity();
+
+        // 构建发奖记录更新条件对象（PO），用于把中奖记录状态更新为完成
+        UserAwardRecord userAwardRecordReq = new UserAwardRecord();
+        // 设置用户ID（更新条件之一）
+        userAwardRecordReq.setUserId(userId);
+        // 设置订单ID（更新条件之二）
+        userAwardRecordReq.setOrderId(userAwardRecordEntity.getOrderId());
+        // 设置目标状态（取枚举的 code 值，发奖完成 complete）
+        userAwardRecordReq.setAwardState(userAwardRecordEntity.getAwardState().getCode());
+
+        // 构建用户积分账户更新对象（PO），首次则插入数据
+        UserCreditAccount userCreditAccountReq = new UserCreditAccount();
+        // 设置积分账户归属的用户ID
+        userCreditAccountReq.setUserId(userCreditAwardEntity.getUserId());
+        // 设置总积分累加值
+        userCreditAccountReq.setTotalAmount(userCreditAwardEntity.getCreditAmount());
+        // 设置可用积分累加值
+        userCreditAccountReq.setAvailableAmount(userCreditAwardEntity.getCreditAmount());
+        // 设置账户状态为开启
+        userCreditAccountReq.setAccountStatus(AccountStatusVO.open.getCode());
+
+        // 开启分库路由 + 事务，保证积分账户与发奖记录写入的一致性
+        try {
+            // 根据用户ID计算并指定本次 SQL 落库的分库
+            dbRouter.doRouter(giveOutPrizesAggregate.getUserId());
+            // 在事务内执行写入逻辑（status 是事务状态对象，用来手动控制回滚）
+            transactionTemplate.execute(status -> {
+                try {
+                    // 先累加用户积分，返回 0 表示账户不存在
+                    int updateAccountCount = userCreditAccountDao.updateAddAmount(userCreditAccountReq);
+                    // 账户不存在时，创建新的积分账户
+                    if (0 == updateAccountCount) {
+                        userCreditAccountDao.insert(userCreditAccountReq);
+                    }
+
+                    // 再将中奖记录状态更新为完成，返回 0 表示重复更新
+                    int updateAwardCount = userAwardRecordDao.updateAwardRecordCompletedState(userAwardRecordReq);
+                    // 更新行数为 0 时，说明中奖记录已被处理过（重复发奖）
+                    if (0 == updateAwardCount) {
+                        // 记录重复更新拦截日志
+                        log.warn("更新中奖记录，重复更新拦截 userId:{} giveOutPrizesAggregate:{}", userId, JSON.toJSONString(giveOutPrizesAggregate));
+                        // 标记事务回滚，撤销已写入的积分变更
+                        status.setRollbackOnly();
+                    }
+                    // 返回任意值，表示事务内逻辑执行成功（execute 需要返回值）
+                    return 1;
+                    // 捕获唯一索引冲突（如并发首次创建账户撞唯一键）
+                } catch (DuplicateKeyException e) {
+                    // 标记整个事务回滚
+                    status.setRollbackOnly();
+                    // 记录唯一索引冲突日志
+                    log.error("更新中奖记录，唯一索引冲突 userId: {} ", userId, e);
+                    // 抛出应用异常，交由上层统一处理
+                    throw new AppException(ResponseCode.INDEX_DUP.getCode(), e);
+                }
+            });
+        } finally {
+            // 无论成功失败，清理分库路由上下文，避免污染后续请求
+            dbRouter.clear();
+        }
+    }
+
+    /**
+     * 查询奖品类型标识（award_key，用于路由发奖策略）
+     *
+     * @param awardId 奖品ID
+     * @return 奖品类型标识
+     */
+    @Override
+    public String queryAwardKey(Integer awardId) {
+        // 委托奖品 DAO 根据奖品ID查询奖品类型标识
+        return awardDao.queryAwardKeyByAwardId(awardId);
     }
 }

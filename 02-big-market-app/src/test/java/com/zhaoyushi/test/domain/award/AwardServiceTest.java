@@ -2,6 +2,7 @@
 package com.zhaoyushi.test.domain.award;
 
 // 引入用户中奖记录实体对象，用于构造测试入参
+import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
 // 引入奖品状态枚举值对象，用于设置中奖记录的初始状态
 import com.zhaoyushi.domain.award.model.valobj.AwardStateVO;
@@ -86,5 +87,31 @@ public class AwardServiceTest {
         // 13. 阻塞主线程，等待异步发送 MQ 的线程执行完毕（演示用）
         new CountDownLatch(1).await();
     }
+
+    /**
+     * 测试分发积分奖品
+     *
+     * <p>构造一个分发奖品实体（积分范围 0.01,1），直接调用发奖服务，
+     * 验证积分账户写入与发奖记录状态更新的完整链路。
+     *
+     * @throws InterruptedException 线程休眠被中断时抛出
+     */
+    @Test
+    public void test_distributeAward() throws InterruptedException {
+        // 创建分发奖品实体对象，用于承载发奖入参
+        DistributeAwardEntity distributeAwardEntity = new DistributeAwardEntity();
+        // 设置发奖目标用户ID
+        distributeAwardEntity.setUserId("xiaofuge");
+        // 设置发奖关联的订单ID
+        distributeAwardEntity.setOrderId("690124733440");
+        // 设置要发放的奖品ID
+        distributeAwardEntity.setAwardId(101);
+        // 设置奖品配置信息（0.01,1 表示随机积分范围，黑名单指定积分值）
+        distributeAwardEntity.setAwardConfig("0.01,1");
+
+        // 调用发奖服务执行积分发奖
+        awardService.distributeAward(distributeAwardEntity);
+    }
+
 
 }

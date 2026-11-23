@@ -2,6 +2,7 @@
 package com.zhaoyushi.domain.award.repository;
 
 // 引入用户中奖记录聚合对象，作为仓储方法的入参类型
+import com.zhaoyushi.domain.award.model.aggregate.GiveOutPrizesAggregate;
 import com.zhaoyushi.domain.award.model.aggregate.UserAwardRecordAggregate;
 // 引入用户中奖记录实体对象（当前接口未直接使用，保留以备用）
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
@@ -27,4 +28,26 @@ public interface IAwardRepository {
      */
     void saveUserAwardRecord(UserAwardRecordAggregate userAwardRecordAggregate);
 
+    /**
+     * 查询奖品配置信息（如积分范围）
+     *
+     * @param awardId 奖品ID
+     * @return 奖品配置字符串
+     */
+    String queryAwardConfig(Integer awardId);
+
+    /**
+     * 保存发奖聚合对象（发奖记录 + 积分账户，同一事务内写入）
+     *
+     * @param giveOutPrizesAggregate 发放奖品聚合对象
+     */
+    void saveGiveOutPrizesAggregate(GiveOutPrizesAggregate giveOutPrizesAggregate);
+
+    /**
+     * 查询奖品类型标识（award_key，用于路由发奖策略）
+     *
+     * @param awardId 奖品ID
+     * @return 奖品类型标识
+     */
+    String queryAwardKey(Integer awardId);
 }

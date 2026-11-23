@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 声明 MyBatis Mapper 的 DTD，用于校验 XML 映射文件的结构 -->
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- mapper 根节点：namespace 绑定对应的 DAO 接口全限定名 -->
+<mapper namespace="com.zhaoyushi.infrastructure.persistent.dao.IUserCreditAccountDao">
+
+    <!-- resultMap：定义数据库列与 PO 对象属性之间的映射关系 -->
+    <resultMap id="dataMap" type="com.zhaoyushi.infrastructure.persistent.po.UserCreditAccount">
+        <!-- 主键列 id 映射到 PO 的 id 属性 -->
+        <id column="id" property="id"/>
+        <!-- user_id 列映射到 PO 的 userId 属性 -->
+        <result column="user_id" property="userId"/>
+        <!-- total_amount 列映射到 PO 的 totalAmount 属性 -->
+        <result column="total_amount" property="totalAmount"/>
+        <!-- available_amount 列映射到 PO 的 availableAmount 属性 -->
+        <result column="available_amount" property="availableAmount"/>
+        <!-- account_status 列映射到 PO 的 accountStatus 属性 -->
+        <result column="account_status" property="accountStatus"/>
+        <!-- create_time 列映射到 PO 的 createTime 属性 -->
+        <result column="create_time" property="createTime"/>
+        <!-- update_time 列映射到 PO 的 updateTime 属性 -->
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- update：累加用户积分，总积分与可用积分同时增加，按 user_id 定位账户 -->
+    <update id="updateAddAmount" parameterType="com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord">
+        <!-- 更新 user_credit_account 表 -->
+        update user_credit_account set
+                                       <!-- 总积分累加传入的 totalAmount -->
+                                       total_amount = total_amount + #{totalAmount},
+                                       <!-- 可用积分累加传入的 availableAmount -->
+                                       available_amount = available_amount + #{availableAmount}
+        <!-- 仅更新指定用户的账户 -->
+        where user_id = #{userId}
+    </update>
+
+    <!-- insert：首次发奖时创建用户积分账户，初始积分与账户状态由入参提供 -->
+    <insert id="insert" parameterType="com.zhaoyushi.infrastructure.persistent.po.UserAwardRecord">
+        <!-- 向 user_credit_account 表插入记录，指定插入列 -->
+        insert into user_credit_account(
+            user_id, total_amount, available_amount, account_status, create_time, update_time
+        ) values (
+                     <!-- 插入用户ID -->
+                     #{userId},
+                     <!-- 插入初始总积分 -->
+                     #{totalAmount},
+                     <!-- 插入初始可用积分 -->
+                     #{availableAmount},
+                     <!-- 插入账户状态 -->
+                     #{accountStatus},
+                     <!-- 创建时间使用数据库当前时间 -->
+                     now(),
+                     <!-- 更新时间使用数据库当前时间 -->
+                     now()
+                 )
+    </insert>
+
+</mapper>

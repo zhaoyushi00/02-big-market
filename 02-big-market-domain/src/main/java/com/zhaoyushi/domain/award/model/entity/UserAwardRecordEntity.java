@@ -51,4 +51,6 @@ public class UserAwardRecordEntity {
     private Date awardTime;
     // 奖品状态：create-创建、complete-发奖完成、fail-发奖失败
     private AwardStateVO awardState;
+    /** 奖品配置信息；发奖的时候，可以根据配置（如积分范围）生成对应奖品 */
+    private String awardConfig;
 }

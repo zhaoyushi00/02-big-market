@@ -29,4 +29,12 @@ public interface IUserAwardRecordDao {
      * @param userAwardRecord 用户中奖记录持久化对象
      */
     void insert(UserAwardRecord userAwardRecord);
+
+    /**
+     * 将中奖记录状态更新为发奖完成
+     *
+     * @param userAwardRecordReq 用户中奖记录持久化对象（携带 userId、orderId）
+     * @return 受影响的行数（为 0 表示记录不存在或已重复更新）
+     */
+    int updateAwardRecordCompletedState(UserAwardRecord userAwardRecordReq);
 }

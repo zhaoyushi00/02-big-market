@@ -1,6 +1,20 @@
 // 声明当前类所属的包路径：触发器层 - 消息监听器
 package com.zhaoyushi.trigger.listener;
 
+// 引入 fastjson 的 JSON 工具，用于将消息字符串反序列化为对象
+import com.alibaba.fastjson.JSON;
+// 引入 fastjson 的 TypeReference，用于保留泛型信息进行反序列化
+import com.alibaba.fastjson.TypeReference;
+// 引入发奖消息事件，作为消息反序列化的目标类型
+import com.zhaoyushi.domain.award.event.SendAwardMessageEvent;
+// 引入分发奖品实体，用于组装发奖入参
+import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
+// 引入发奖服务接口，用于执行实际发奖
+import com.zhaoyushi.domain.award.service.IAwardService;
+// 引入基础事件抽象类，作为消息反序列化的外层结构
+import com.zhaoyushi.types.event.BaseEvent;
+// 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
+import jakarta.annotation.Resource;
 // 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
 import lombok.extern.slf4j.Slf4j;
 // 引入 @Queue 注解，用于声明监听队列（队列不存在时自动创建）
@@ -32,6 +46,10 @@ public class SendAwardCustomer {
     @Value("${spring.rabbitmq.topic.send_award}")
     private String topic;
 
+    // 注入发奖服务接口，用于消费消息后执行实际发奖
+    @Resource
+    private IAwardService awardService;
+
     /**
      * 监听发奖消息队列
      *
@@ -47,6 +65,26 @@ public class SendAwardCustomer {
         try {
             // 记录消费成功日志（topic 与消息内容）
             log.info("监听用户奖品发送消息 topic: {} message: {}", topic, message);
+
+            // 将消息字符串反序列化为带泛型的事件消息对象（TypeReference 用于保留泛型信息）
+            BaseEvent.EventMessage<SendAwardMessageEvent.SendAwardMessage> eventMessage = JSON.parseObject(message, new TypeReference<BaseEvent.EventMessage<SendAwardMessageEvent.SendAwardMessage>>() {
+            }.getType());
+            // 从事件消息中取出真正的发奖业务数据
+            SendAwardMessageEvent.SendAwardMessage sendAwardMessage = eventMessage.getData();
+
+            // 创建分发奖品实体对象，用于承载发奖入参
+            DistributeAwardEntity distributeAwardEntity = new DistributeAwardEntity();
+            // 设置发奖目标用户ID
+            distributeAwardEntity.setUserId(sendAwardMessage.getUserId());
+            // 设置发奖关联的订单ID
+            distributeAwardEntity.setOrderId(sendAwardMessage.getOrderId());
+            // 设置要发放的奖品ID
+            distributeAwardEntity.setAwardId(sendAwardMessage.getAwardId());
+            // 设置奖品配置信息（如积分范围）
+            distributeAwardEntity.setAwardConfig(sendAwardMessage.getAwardConfig());
+            // 调用发奖服务执行实际发奖
+            awardService.distributeAward(distributeAwardEntity);
+
         } catch (Exception e) {
             // 记录消费失败日志（topic 与消息内容）
             log.error("监听用户奖品发送消息，消费失败 topic: {} message: {}", topic, message);

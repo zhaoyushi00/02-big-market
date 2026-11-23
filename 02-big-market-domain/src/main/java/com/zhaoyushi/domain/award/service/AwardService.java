@@ -6,6 +6,8 @@ import com.zhaoyushi.domain.award.event.SendAwardMessageEvent;
 // 引入用户中奖记录聚合对象，作为组装结果传入仓储层
 import com.zhaoyushi.domain.award.model.aggregate.UserAwardRecordAggregate;
 // 引入任务实体对象，用于承载待发送的发奖消息
+// 引入分发奖品实体对象，作为发奖服务方法的入参类型
+import com.zhaoyushi.domain.award.model.entity.DistributeAwardEntity;
 import com.zhaoyushi.domain.award.model.entity.TaskEntity;
 // 引入用户中奖记录实体对象，作为方法入参
 import com.zhaoyushi.domain.award.model.entity.UserAwardRecordEntity;
@@ -14,11 +16,18 @@ import com.zhaoyushi.domain.award.model.valobj.TaskStateVO;
 // 引入奖品仓储接口，用于持久化聚合对象
 import com.zhaoyushi.domain.award.repository.IAwardRepository;
 // 引入基础事件抽象类，使用其内部 EventMessage 作为消息主体类型
+// 引入发奖策略接口，用于按奖品 key 路由到具体发奖实现
+import com.zhaoyushi.domain.award.service.distribute.IDistributeAward;
 import com.zhaoyushi.types.event.BaseEvent;
 // 引入 JSR-250 的 @Resource 注解，用于按名称注入依赖
 import jakarta.annotation.Resource;
+// 引入 Lombok 的 @Slf4j 注解，自动生成日志对象 log
+import lombok.extern.slf4j.Slf4j;
 // 引入 @Service 注解，将本类注册为 Spring 服务 Bean
 import org.springframework.stereotype.Service;
+
+// 引入 Map 集合，用于收集所有发奖策略实现（key 为奖品类型标识）
+import java.util.Map;
 
 /**
  * 奖品服务实现（领域层 - 奖品模块）
@@ -36,14 +45,33 @@ import org.springframework.stereotype.Service;
  */
 // 注册为 Spring 服务 Bean
 @Service
+// 使用 Lombok 生成日志对象 log
+@Slf4j
 public class AwardService implements IAwardService{
 
     // 注入奖品仓储接口实现，负责聚合对象的持久化
-    @Resource
-    private IAwardRepository awardRepository;
+    private final IAwardRepository awardRepository;
     // 注入发奖消息事件，用于构建事件消息体与获取消息主题
-    @Resource
-    private SendAwardMessageEvent sendAwardMessageEvent;
+    private final SendAwardMessageEvent sendAwardMessageEvent;
+
+    // 发奖策略集合：Spring 会将所有 IDistributeAward 实现以 Bean 名称（奖品 key）为 key 注入该 Map
+    private final Map<String, IDistributeAward> distributeAwardMap;
+
+    /**
+     * 构造器注入依赖（发奖策略集合、奖品仓储、发奖消息事件）
+     *
+     * @param distributeAwardMap     发奖策略集合（key 为奖品类型标识，value 为策略实现）
+     * @param awardRepository        奖品仓储接口
+     * @param sendAwardMessageEvent  发奖消息事件
+     */
+    public AwardService(Map<String, IDistributeAward> distributeAwardMap, IAwardRepository awardRepository, SendAwardMessageEvent sendAwardMessageEvent) {
+        // 注入发奖策略集合
+        this.distributeAwardMap = distributeAwardMap;
+        // 注入奖品仓储接口
+        this.awardRepository = awardRepository;
+        // 注入发奖消息事件
+        this.sendAwardMessageEvent = sendAwardMessageEvent;
+    }
 
     /**
      * 保存用户中奖记录
@@ -59,10 +87,14 @@ public class AwardService implements IAwardService{
         SendAwardMessageEvent.SendAwardMessage sendAwardMessage = new SendAwardMessageEvent.SendAwardMessage();
         // 设置奖品 ID（从入参中奖记录中获取）
         sendAwardMessage.setAwardId(userAwardRecordEntity.getAwardId());
+        // 设置订单 ID（从入参中奖记录中获取）
+        sendAwardMessage.setOrderId(userAwardRecordEntity.getOrderId());
         // 设置奖品标题（从入参中奖记录中获取）
         sendAwardMessage.setAwardTitle(userAwardRecordEntity.getAwardTitle());
         // 设置用户 ID（从入参中奖记录中获取）
         sendAwardMessage.setUserId(userAwardRecordEntity.getUserId());
+        // 设置奖品配置信息（如积分范围，从入参中奖记录中获取）
+        sendAwardMessage.setAwardConfig(userAwardRecordEntity.getAwardConfig());
 
         // 2. 基于发奖数据体构建统一结构的事件消息（自动生成 id 与时间戳）
         BaseEvent.EventMessage<SendAwardMessageEvent.SendAwardMessage> sendAwardMessageEventMessage = sendAwardMessageEvent.buildEventMessage(sendAwardMessage);
@@ -91,5 +123,39 @@ public class AwardService implements IAwardService{
 
         // 5. 委托仓储层保存聚合对象（一个事务下同时写入用户中奖记录与任务记录）
         awardRepository.saveUserAwardRecord(userAwardRecordAggregate);
+    }
+
+    /**
+     * 分发奖品
+     *
+     * <p>根据奖品ID查询奖品类型标识（award_key），从发奖策略集合中路由到
+     * 对应的发奖实现并执行发奖。奖品ID或发奖策略不存在时分别记录日志/抛异常。
+     *
+     * @param distributeAwardEntity 分发奖品实体对象
+     */
+    @Override
+    public void distributeAward(DistributeAwardEntity distributeAwardEntity) {
+        // 查询奖品类型标识（award_key，用于路由发奖策略）
+        String awardKey = awardRepository.queryAwardKey(distributeAwardEntity.getAwardId());
+        // 校验奖品类型标识是否存在
+        if (null == awardKey) {
+            // 奖品ID不存在时记录错误日志并直接返回
+            log.error("分发奖品，奖品ID不存在。awardKey:{}", awardKey);
+            return;
+        }
+
+        // 根据奖品类型标识从集合中获取对应的发奖策略实现
+        IDistributeAward distributeAward = distributeAwardMap.get(awardKey);
+
+        // 校验发奖策略实现是否存在
+        if (null == distributeAward) {
+            // 对应发奖策略不存在时记录错误日志
+            log.error("分发奖品，对应的服务不存在。awardKey:{}", awardKey);
+            // 抛出运行时异常，提示奖品对应的发奖服务不存在
+            throw new RuntimeException("分发奖品，奖品" + awardKey + "对应的服务不存在");
+        }
+
+        // 调用对应发奖策略执行发奖
+        distributeAward.giveOutPrizes(distributeAwardEntity);
     }
 }

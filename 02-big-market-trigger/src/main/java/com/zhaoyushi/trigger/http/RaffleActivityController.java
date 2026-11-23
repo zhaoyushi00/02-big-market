@@ -196,6 +196,8 @@ public class RaffleActivityController implements IRaffleActivityService {
                     .awardTime(new Date())
                     // 设置中奖状态为初始态 create
                     .awardState(AwardStateVO.create)
+                    // 设置奖品配置信息（如积分范围，透传至发奖阶段使用）
+                    .awardConfig(raffleAwardEntity.getAwardConfig())
                     // 构建中奖记录实体
                     .build();
             // 调用奖品服务保存中奖记录

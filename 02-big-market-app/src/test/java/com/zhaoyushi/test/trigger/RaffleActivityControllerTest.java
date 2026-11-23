@@ -14,6 +14,9 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+// 引入 CountDownLatch，用于阻塞主线程等待异步消息消费完成
+import java.util.concurrent.CountDownLatch;
+
 /**
  * 活动抽奖控制器测试
  * <p>通过直接注入触发器服务接口（IRaffleActivityService）调用活动装配与抽奖接口，
@@ -47,7 +50,7 @@ public class RaffleActivityControllerTest {
     }
 
     /**
-     * 测试活动抽奖：用户 xiaofuge 参与活动 100301 的抽奖
+     * 测试活动抽奖：用户 zhaoyushi 参与活动 100301 的抽奖
      */
     @Test
     public void test_draw() {
@@ -56,7 +59,7 @@ public class RaffleActivityControllerTest {
         // 设置活动 ID
         request.setActivityId(100301L);
         // 设置参与抽奖的用户 ID
-        request.setUserId("xiaofuge");
+        request.setUserId("zhaoyushi");
         // 调用抽奖接口，返回抽奖结果
         Response<ActivityDrawResponseDTO> response = raffleActivityService.draw(request);
 
@@ -66,15 +69,40 @@ public class RaffleActivityControllerTest {
         log.info("测试结果：{}", JSON.toJSONString(response));
     }
 
+    /**
+     * 测试黑名单用户抽奖：用户 user003 命中黑名单，验证积分奖品发放链路
+     *
+     * @throws InterruptedException 线程休眠被中断时抛出
+     */
+    @Test
+    public void test_draw_black() throws InterruptedException {
+        // 构建抽奖请求 DTO
+        ActivityDrawRequestDTO request = new ActivityDrawRequestDTO();
+        // 设置活动 ID
+        request.setActivityId(100301L);
+        // 设置参与抽奖的用户 ID（user003 为黑名单用户）
+        request.setUserId("user003");
+        // 调用抽奖接口，返回抽奖结果
+        Response<ActivityDrawResponseDTO> response = raffleActivityService.draw(request);
+
+        // 打印请求参数，便于对照结果
+        log.info("请求参数：{}", JSON.toJSONString(request));
+        // 打印抽奖结果
+        log.info("测试结果：{}", JSON.toJSONString(response));
+
+        // 阻塞主线程，等待异步发奖消息消费完成
+        new CountDownLatch(1).await();
+    }
+
     @Test
     public void test_calendarSignRebate(){
-        Response<Boolean> response = raffleActivityService.calendarSignRebate("zhaoyushi");
+        Response<Boolean> response = raffleActivityService.calendarSignRebate("user003");
         log.info("测试结果：{}", JSON.toJSONString(response));
     }
 
     @Test
     public void test_isCalendarSignRebate() {
-        Response<Boolean> response = raffleActivityService.isCalendarSignRebate("zhaoyushi");
+        Response<Boolean> response = raffleActivityService.isCalendarSignRebate("user003");
         log.info("测试结果：{}", JSON.toJSONString(response));
     }
 

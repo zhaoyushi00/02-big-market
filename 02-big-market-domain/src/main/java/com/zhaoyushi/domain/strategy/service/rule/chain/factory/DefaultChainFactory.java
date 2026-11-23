@@ -92,6 +92,10 @@ public class DefaultChainFactory {
         private Integer awardId;
         /** 逻辑模型标识：记录本次抽奖命中的责任链节点 code（rule_blacklist/rule_weight/rule_default） */
         private String logicModel;
+        /**
+         * 抽奖奖品规则
+         */
+        private String awardRuleValue;
     }
 
     @Getter

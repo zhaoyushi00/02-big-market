@@ -68,8 +68,7 @@ public abstract class AbstractRaffleStrategy implements IRaffleStrategy {
         // 权重：按积分档位抽奖，已经在「权重子表」里完成了精细化抽奖，抽到即最终。
         // 默认抽奖：只是从总表「海选」，选出来的奖品可能带各种后置解锁条件，必须再过一遍规则树。
         if (!DefaultChainFactory.LogicModel.RULE_DEFAULT.getCode().equals(chainStrategyAwardVO.getLogicModel())) {
-            // TODO awardConfig 暂时为空。黑名单指定积分奖品，后续需要在库表中配置上对应的1积分值，并获取到。
-            return buildRaffleAwardEntity(strategyId, chainStrategyAwardVO.getAwardId(), null);
+            return buildRaffleAwardEntity(strategyId, chainStrategyAwardVO.getAwardId(), chainStrategyAwardVO.getAwardRuleValue());
         }
 
         // 3. 规则树抽奖过滤【奖品ID，会根据抽奖次数判断、库存判断、兜底兜里返回最终的可获得奖品信息】
